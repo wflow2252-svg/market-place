@@ -19,7 +19,8 @@ const Signup = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
+      const API_URL = import.meta.env.VITE_API_URL || 'https://market-place-fhln.vercel.app';
+      const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -47,7 +48,8 @@ const Signup = () => {
     setLoading(true);
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/verify-otp`, {
+      const API_URL = import.meta.env.VITE_API_URL || 'https://market-place-fhln.vercel.app';
+      const response = await fetch(`${API_URL}/api/auth/verify-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
