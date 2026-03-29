@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const prisma = require('../utils/db');
 const generateToken = require('../utils/generateToken');
 const sendEmail = require('../utils/sendEmail');
@@ -7,54 +7,59 @@ const sendEmail = require('../utils/sendEmail');
 // @route   POST /api/auth/register
 // @access  Public
 const registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
+  try {
+    const { name, email, password } = req.body;
 
-  if (!name || !email || !password) {
-    return res.status(400).json({ success: false, message: 'Please provide all required fields' });
-  }
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, message: 'Please provide all required fields' });
+    }
 
-  const userExists = await prisma.user.findUnique({ where: { email } });
+    const userExists = await prisma.user.findUnique({ where: { email } });
 
-  if (userExists) {
-    return res.status(400).json({ success: false, message: 'User already exists' });
-  }
+    if (userExists) {
+      return res.status(400).json({ success: false, message: 'User already exists' });
+    }
 
-  const salt = await bcrypt.genSalt(10);
-  const hashedPassword = await bcrypt.hash(password, salt);
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-  // Generate 6-digit OTP
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
 
-  const user = await prisma.user.create({
-    data: {
-      name,
-      email,
-      password: hashedPassword,
-      otp,
-      otpExpiresAt,
-    },
-  });
-
-  if (user) {
-    // Send OTP email
-    await sendEmail({
-      email: user.email,
-      subject: 'Marketplace - Verify your email (OTP)',
-      message: `Your verification code is: ${otp}. It will expire in 10 minutes.`,
-    });
-
-    res.status(201).json({
-      success: true,
-      message: 'User registered. Please check email for OTP.',
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword,
+        otp,
+        otpExpiresAt,
       },
     });
-  } else {
-    res.status(400).json({ success: false, message: 'Invalid user data' });
+
+    if (user) {
+      // Send OTP email
+      await sendEmail({
+        email: user.email,
+        subject: 'Marketplace - Verify your email (OTP)',
+        message: `Your verification code is: ${otp}. It will expire in 10 minutes.`,
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'User registered. Please check email for OTP.',
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        },
+      });
+    } else {
+      res.status(400).json({ success: false, message: 'Invalid user data' });
+    }
+  } catch (error) {
+    console.error(`[Signup Error]: ${error.message}`);
+    res.status(500).json({ success: false, message: 'حدث خطأ داخلي في الخادم.', error: error.message });
   }
 };
 
