@@ -75,6 +75,12 @@ app.use((err, req, res, next) => {
     res.status(500).json({ success: false, message: 'حدث خطأ داخلي في الخادم.' });
 });
 
-app.listen(PORT, () => {
-    console.log(`[Security] Node Server is running safely on port ${PORT}`);
-});
+// Only listen when running locally (not on Vercel)
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => {
+        console.log(`[Security] Node Server is running safely on port ${PORT}`);
+    });
+}
+
+// Export for Vercel Serverless Functions
+module.exports = app;
