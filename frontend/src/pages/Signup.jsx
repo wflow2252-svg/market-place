@@ -44,9 +44,8 @@ const Signup = () => {
         setLoading(false);
       })
       .catch((err) => {
-        console.log('Email sending FAILED... Bypassing for testing.', err);
-        alert('تنبيه: لم يتمكن النظام من إرسال إيميل لعدم وجود إعدادات EmailJS، ولكن دعنا نختبر النظام! \n\n الكود السري الخاص بك الآن هو: ' + otp);
-        setStep(2); 
+        console.error('Email sending FAILED...', err);
+        alert('وفقاً لـ EmailJS، لم نتمكن من إرسال كود التحقق. يُرجى مراجعة الإعدادات أو التأكد من صحة البريد المُدخل.');
         setLoading(false);
       });
 
