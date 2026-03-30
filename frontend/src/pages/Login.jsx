@@ -28,9 +28,15 @@ const Login = () => {
       
       if (data.success) {
         localStorage.setItem('token', data.token);
+        localStorage.setItem('userRole', data.user?.role || 'USER');
+        localStorage.setItem('userName', data.user?.name || 'User');
+        window.dispatchEvent(new Event('auth-change'));
+        
         if (data.user?.role === 'ADMIN' || data.redirect) {
           localStorage.setItem('isAdmin', 'true');
           navigate(data.redirect || '/my-secret-panel-2024');
+        } else if (data.user?.role === 'BRAND') {
+          navigate('/brand-panel');
         } else {
           localStorage.removeItem('isAdmin');
           navigate('/'); // Normal user goes to home
