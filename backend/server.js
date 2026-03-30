@@ -53,9 +53,11 @@ app.use('/api/auth/login', loginLimiter);
 // === Application Routes ===
 const authRoutes = require('./src/routes/authRoutes');
 const productRoutes = require('./src/routes/productRoutes');
+const userRoutes = require('./src/routes/userRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/users', userRoutes);
 
 // Setup Health Check
 app.get('/api/health', async (req, res) => {

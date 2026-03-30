@@ -15,13 +15,14 @@ model User {
   name      String
   email     String   @unique
   password  String
-  role      String   @default("USER") // "USER" or "ADMIN"
+  role      String   @default("USER") // "USER", "ADMIN", or "BRAND"
   isVerified Boolean @default(false)
   otp       String?
   otpExpiresAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   orders    Order[]
+  products  Product[] @relation("BrandProducts")
 }
 
 model Product {
@@ -33,6 +34,8 @@ model Product {
   images      String?  // JSON string or comma-separated URLs
   categoryId  Int?
   category    Category? @relation(fields: [categoryId], references: [id])
+  brandId     Int?
+  brand       User?    @relation("BrandProducts", fields: [brandId], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   OrderItems  OrderItem[]
