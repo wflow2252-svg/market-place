@@ -22,9 +22,9 @@ const Signup = () => {
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
       
       // EmailJS Keys
-      const serviceId = 'service_xg9aawl';
-      const templateId = 'template_v8x18p8';
-      const publicKey = 'QcMwXfQ59HwEw045L';
+      const serviceId = 'service_tk56i38';
+      const templateId = 'template_ylynvjq';
+      const publicKey = 'EtT1p30TcZK7K4aGh';
 
       setSentOtp(otp);
 
