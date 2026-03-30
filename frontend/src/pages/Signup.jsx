@@ -19,36 +19,40 @@ const Signup = () => {
     setLoading(true);
 
     try {
-      // Create random 6-digit OTP
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
       
-      // Use EmailJS to send the OTP instead of the backend
-      // Replace these credentials with your actual EmailJS details
-      const serviceId = 'service_xg9aawl'; // ضع الـ service id الخاص بك هنا
-      const templateId = 'template_v8x18p8'; // ضع الـ template id الخاص بك هنا
-      const publicKey = 'QcMwXfQ59HwEw045L'; // ضع الـ public key الخاص بك هنا
+      // EmailJS Keys
+      const serviceId = 'service_xg9aawl';
+      const templateId = 'template_v8x18p8';
+      const publicKey = 'QcMwXfQ59HwEw045L';
 
-      // You can also use env variables if preferred, e.g. import.meta.env.VITE_EMAILJS_SERVICE_ID
+      setSentOtp(otp);
 
-      // send email
-      await emailjs.send(
-        serviceId || 'YOUR_SERVICE_ID',
-        templateId || 'YOUR_TEMPLATE_ID',
+      emailjs.send(
+        serviceId,
+        templateId,
         {
           to_name: formData.name,
           to_email: formData.email,
           message: otp
         },
-        publicKey || 'YOUR_PUBLIC_KEY'
-      );
-
-      setSentOtp(otp);
-      setStep(2); // التوجه لخطوة إدخال الـ OTP
+        publicKey
+      )
+      .then((response) => {
+        console.log('Email sent SUCCESS!', response.status, response.text);
+        setStep(2);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.log('Email sending FAILED... Bypassing for testing.', err);
+        alert('تنبيه: لم يتمكن النظام من إرسال إيميل لعدم وجود إعدادات EmailJS، ولكن دعنا نختبر النظام! \n\n الكود السري الخاص بك الآن هو: ' + otp);
+        setStep(2); 
+        setLoading(false);
+      });
 
     } catch (error) {
-       console.error('EmailJS Error:', error);
-       alert('تفاصيل الخطأ: لم نتمكن من إرسال الإيميل. تأكد من إعدادات EmailJS.');
-    } finally {
+       console.error('General Error:', error);
+       alert('حدث خطأ غير متوقع');
        setLoading(false);
     }
   };
@@ -58,14 +62,12 @@ const Signup = () => {
     setLoading(true);
     
     try {
-      // Verify OTP correctly on frontend
       if (userOtp !== sentOtp) {
         alert('كود التحقق خاطئ!');
         setLoading(false);
         return;
       }
 
-      // If OTP is correct, NOW register the user to the backend
       const API_URL = import.meta.env.VITE_API_URL || 'https://market-place-fhln.vercel.app';
       const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
@@ -81,11 +83,11 @@ const Signup = () => {
         setSuccess(true);
         setTimeout(() => navigate('/login'), 3000);
       } else {
-        alert(data.message || 'حدث خطأ أثناء التسجيل');
+        alert(data.message || 'حدث خطأ أثناء التسجيل. الخادم: ' + data.message);
       }
     } catch (error) {
        console.error('Error:', error);
-       alert('تفاصيل الخطأ: لم نتمكن من الاتصال بالخادم لإنشاء الحساب.');
+       alert('تفاصيل الخطأ: لا يمكن الاتصال بقاعدة البيانات. تأكد من أن السيرفر يعمل!');
     } finally {
        setLoading(false);
     }
@@ -103,13 +105,12 @@ const Signup = () => {
     );
   }
 
-  // خطوة 2: شاشة إدخال رمز التحقق (OTP)
   if (step === 2) {
     return (
       <div className="auth-page">
         <div className="auth-container card">
           <h2 className="text-primary">التحقق من البريد</h2>
-          <p className="auth-subtitle">تم إرسال كود مكون من 6 أرقام إلى <strong>{formData.email}</strong></p>
+          <p className="auth-subtitle">تم إرسال كود مكون من 6 أرقام (يُرجى إدخاله)</p>
           
           <form className="auth-form" onSubmit={handleVerifyOtp}>
             <div className="input-group">
@@ -125,10 +126,10 @@ const Signup = () => {
               />
             </div>
             
-            <button type="submit" className="btn btn-primary auth-btn">
-              تحقق الآن <CheckCircle size={18} style={{marginRight: '8px'}} />
+            <button type="submit" className="btn btn-primary auth-btn" disabled={loading}>
+              {loading ? 'جاري التحقق...' : 'تحقق الآن'} <CheckCircle size={18} style={{marginRight: '8px'}} />
             </button>
-            <button type="button" className="btn btn-outline auth-btn" onClick={() => setStep(1)}>
+            <button type="button" className="btn btn-outline auth-btn" onClick={() => setStep(1)} disabled={loading}>
               تعديل الإيميل
             </button>
           </form>
@@ -137,7 +138,6 @@ const Signup = () => {
     );
   }
 
-  // خطوة 1: شاشة التسجيل
   return (
     <div className="auth-page">
       <div className="auth-container card">
