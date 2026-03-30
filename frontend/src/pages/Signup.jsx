@@ -23,7 +23,7 @@ const Signup = () => {
       
       // EmailJS Keys
       const serviceId = 'service_tk56i38';
-      const templateId = 'template_a59ebcf';
+      const templateId = 'template_5zk88qb';
       const publicKey = 'EtT1p30TcZK7K4aGh';
 
       setSentOtp(otp);
