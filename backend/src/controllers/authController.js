@@ -23,31 +23,19 @@ const registerUser = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
-
     const user = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
-        otp,
-        otpExpiresAt,
+        isVerified: true, // Frontend handles OTP now via EmailJS
       },
     });
 
     if (user) {
-      // Send OTP email
-      await sendEmail({
-        email: user.email,
-        subject: 'Marketplace - Verify your email (OTP)',
-        message: `Your verification code is: ${otp}. It will expire in 10 minutes.`,
-      });
-
       res.status(201).json({
         success: true,
-        message: 'User registered. Please check email for OTP.',
+        message: 'User registered successfully!',
         user: {
           id: user.id,
           name: user.name,

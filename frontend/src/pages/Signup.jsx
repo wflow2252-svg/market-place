@@ -19,6 +19,53 @@ const Signup = () => {
     setLoading(true);
 
     try {
+      // Create random 6-digit OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      
+      // Use EmailJS to send the OTP instead of the backend
+      // Replace these credentials with your actual EmailJS details
+      const serviceId = 'service_xg9aawl'; // ضع الـ service id الخاص بك هنا
+      const templateId = 'template_v8x18p8'; // ضع الـ template id الخاص بك هنا
+      const publicKey = 'QcMwXfQ59HwEw045L'; // ضع الـ public key الخاص بك هنا
+
+      // You can also use env variables if preferred, e.g. import.meta.env.VITE_EMAILJS_SERVICE_ID
+
+      // send email
+      await emailjs.send(
+        serviceId || 'YOUR_SERVICE_ID',
+        templateId || 'YOUR_TEMPLATE_ID',
+        {
+          to_name: formData.name,
+          to_email: formData.email,
+          message: otp
+        },
+        publicKey || 'YOUR_PUBLIC_KEY'
+      );
+
+      setSentOtp(otp);
+      setStep(2); // التوجه لخطوة إدخال الـ OTP
+
+    } catch (error) {
+       console.error('EmailJS Error:', error);
+       alert('تفاصيل الخطأ: لم نتمكن من إرسال الإيميل. تأكد من إعدادات EmailJS.');
+    } finally {
+       setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      // Verify OTP correctly on frontend
+      if (userOtp !== sentOtp) {
+        alert('كود التحقق خاطئ!');
+        setLoading(false);
+        return;
+      }
+
+      // If OTP is correct, NOW register the user to the backend
       const API_URL = import.meta.env.VITE_API_URL || 'https://market-place-fhln.vercel.app';
       const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
@@ -31,43 +78,14 @@ const Signup = () => {
       const data = await response.json();
 
       if (data.success) {
-        setStep(2); // التوجه لخطوة إدخال الـ OTP
+        setSuccess(true);
+        setTimeout(() => navigate('/login'), 3000);
       } else {
         alert(data.message || 'حدث خطأ أثناء التسجيل');
       }
     } catch (error) {
-       console.error('FAILED...', error);
-       alert('تفاصيل الخطأ: لم نتمكن من الاتصال بالخادم.');
-    } finally {
-       setLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    try {
-      const API_URL = import.meta.env.VITE_API_URL || 'https://market-place-fhln.vercel.app';
-      const response = await fetch(`${API_URL}/api/auth/verify-otp`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: formData.email, otp: userOtp }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setSuccess(true);
-        setTimeout(() => navigate('/login'), 3000);
-      } else {
-        alert(data.message || 'كود التحقق خاطئ!');
-      }
-    } catch (error) {
        console.error('Error:', error);
-       alert('تفاصيل الخطأ: لم نتمكن من الاتصال بالخادم.');
+       alert('تفاصيل الخطأ: لم نتمكن من الاتصال بالخادم لإنشاء الحساب.');
     } finally {
        setLoading(false);
     }
