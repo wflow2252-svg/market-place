@@ -7,6 +7,7 @@ import Signup from './pages/Signup';
 import Admin from './pages/Admin';
 import BrandDashboard from './pages/BrandDashboard';
 import Profile from './pages/Profile';
+import SiteInspector from './components/SiteInspector';
 
 // Protected Route Component for Admin
 const AdminRoute = ({ children }) => {
@@ -59,6 +60,7 @@ function App() {
             />
           </Routes>
         </main>
+        <SiteInspector />
       </div>
     </Router>
   );

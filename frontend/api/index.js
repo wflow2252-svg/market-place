@@ -23,9 +23,22 @@ app.get('/v1/health', async (req, res) => {
     try {
         const prisma = require('../backend/src/utils/db');
         await prisma.$queryRaw`SELECT 1`;
-        return res.status(200).json({ success: true, message: 'DATABASE_CONNECTED' });
+        return res.status(200).json({ 
+            success: true, 
+            message: 'DATABASE_CONNECTED',
+            env: {
+                has_db_url: !!process.env.DATABASE_URL,
+                has_jwt_secret: !!process.env.JWT_SECRET,
+                node_env: process.env.NODE_ENV
+            }
+        });
     } catch (error) {
-        return res.status(500).json({ success: false, message: 'DB_CONNECTION_FAILED', error: error.message });
+        return res.status(500).json({ 
+            success: false, 
+            message: 'DB_CONNECTION_FAILED', 
+            error: error.message,
+            tip: 'Check your Vercel Dashboard -> Settings -> Environment Variables for DATABASE_URL.'
+        });
     }
 });
 
