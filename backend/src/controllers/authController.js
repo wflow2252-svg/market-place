@@ -130,8 +130,21 @@ const loginUser = async (req, res) => {
       res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
   } catch (error) {
-    console.error(`[Login Error]: ${error.message}`);
-    res.status(500).json({ success: false, message: 'خطأ الخادم: ' + error.message });
+    let errorMessage = error.message;
+    let details = {};
+
+    if (error.message.includes('Can\'t reach database server') || error.message.includes('Prisma Client could not connect')) {
+      errorMessage = 'Database connection failed. Please check your DATABASE_URL in Vercel settings.';
+      details = { type: 'DB_CONNECTION_ERROR', code: error.code };
+    }
+
+    console.error(`[Login Error]: ${error.message} (Code: ${error.code})`);
+    
+    res.status(500).json({ 
+      success: false, 
+      message: 'خطأ داخلي في الخادم: ' + errorMessage,
+      diagnostics: details
+    });
   }
 };
 
