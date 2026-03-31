@@ -11,7 +11,7 @@
     },
     {
       "source": "/((?!v1|api).*)",
-      "destination": "/frontend/dist/index.html"
+      "destination": "/index.html"
     }
   ]
 }
