@@ -11,8 +11,8 @@ const Admin = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const API_URL = import.meta.env.VITE_API_URL || 'https://market-place-fhln.vercel.app';
-      const res = await fetch(`${API_URL}/api/users`, {
+      const API_URL = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${API_URL}/v1/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
@@ -33,8 +33,8 @@ const Admin = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const API_URL = import.meta.env.VITE_API_URL || 'https://market-place-fhln.vercel.app';
-      const res = await fetch(`${API_URL}/api/users/brand`, {
+      const API_URL = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${API_URL}/v1/users/brand`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
