@@ -40,7 +40,7 @@ const limiter = rateLimit({
     max: 200, 
     message: { success: false, message: 'تم تجاوز الحد المسموح من الطلبات، يرجى المحاولة لاحقاً.' }
 });
-app.use('/api', limiter);
+app.use('/v1', limiter);
 
 // Strict Rate Limiting for auth/login
 const loginLimiter = rateLimit({
@@ -48,19 +48,19 @@ const loginLimiter = rateLimit({
     max: 5,
     message: { success: false, message: 'تجاوزت عدد محاولات الدخول الخاطئة (5 محاولات). تم حظر الـ IP لمدة 10 دقائق لحمايتك.' }
 });
-app.use('/api/auth/login', loginLimiter);
+app.use('/v1/auth/login', loginLimiter);
 
 // === Application Routes ===
 const authRoutes = require('./src/routes/authRoutes');
 const productRoutes = require('./src/routes/productRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/users', userRoutes);
+app.use('/v1/auth', authRoutes);
+app.use('/v1/products', productRoutes);
+app.use('/v1/users', userRoutes);
 
 // Setup Health Check
-app.get('/api/health', async (req, res) => {
+app.get('/v1/health', async (req, res) => {
     try {
         const prisma = require('./src/utils/db');
         await prisma.$queryRaw`SELECT 1`;

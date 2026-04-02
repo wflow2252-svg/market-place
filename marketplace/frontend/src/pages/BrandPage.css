@@ -1,0 +1,208 @@
+.brand-page {
+  animation: fadeIn 0.8s ease-out;
+  min-height: 100vh;
+  color: var(--text-deep);
+  background-color: var(--bg-soft);
+}
+
+.brand-page.bold-noir { background-color: #ffffff; }
+.brand-page.classic-aurum { background-image: radial-gradient(circle at top right, rgba(212, 175, 55, 0.05), transparent); }
+
+/* Hero Section Elite 3.0 */
+.brand-hero {
+  position: relative;
+  height: 400px;
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 50px;
+  overflow: hidden;
+  background: white;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.brand-hero-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(to top, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.4) 60%, transparent 100%);
+  z-index: 1;
+}
+
+.brand-hero-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  width: 100%;
+}
+
+/* Avatar Premium V3 */
+.brand-avatar-premium {
+  width: 160px;
+  height: 160px;
+  padding: 6px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  background: white;
+  border-radius: 20px;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid #f1f5f9;
+}
+
+.brand-avatar-premium img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 16px;
+}
+
+.brand-initial {
+  font-size: 4rem;
+  font-weight: 800;
+  color: var(--text-deep);
+}
+
+.verified-badge-large {
+  position: absolute;
+  bottom: -8px;
+  right: -8px;
+  background: white;
+  border-radius: 50%;
+  padding: 4px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* Info Elite */
+.brand-info {
+  max-width: 700px;
+}
+
+.brand-title {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  margin-bottom: 10px;
+  color: var(--text-deep);
+  letter-spacing: -2px;
+}
+
+.brand-bio {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.brand-stats span {
+  padding: 8px 24px;
+  font-weight: 700;
+  background: #f1f5f9;
+  border-radius: 30px;
+  color: var(--text-deep);
+}
+
+/* Showcase Elite */
+.brand-showcase {
+  padding: 80px 0;
+}
+
+.section-header-elite {
+  margin-bottom: 50px;
+  text-align: center;
+}
+
+.section-header-elite h2 {
+  font-size: 2.2rem;
+  margin-bottom: 12px;
+  color: var(--text-deep);
+}
+
+.header-line-silver {
+  width: 60px;
+  height: 3px;
+  margin: 0 auto;
+  background: var(--accent-silver);
+}
+
+/* Product Cards Elite 3.0 */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 30px;
+}
+
+.product-card-elite {
+  padding: 24px;
+  background: white;
+  border-radius: var(--border-radius-xl);
+  transition: var(--transition-warm);
+  border: 1px solid var(--bg-beige);
+  box-shadow: var(--shadow-soft);
+  position: relative;
+  overflow: hidden;
+}
+
+.product-card-elite::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(230, 126, 34, 0.05), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.product-card-elite:hover::before {
+  opacity: 1;
+}
+
+.product-card-elite:hover {
+  transform: translateY(-8px) scale(1.01);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--accent-orange);
+}
+
+.product-img-ph {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  background: var(--bg-soft);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-img-ph img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: var(--transition-luxe);
+}
+
+.product-card-elite:hover .product-img-ph img {
+  transform: scale(1.05);
+}
+
+.product-details-elite h4 {
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+  color: var(--text-deep);
+}
+
+.product-details-elite .price {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--text-deep);
+}
+
+@media (max-width: 900px) {
+  .brand-hero { height: auto; padding-top: 100px; padding-bottom: 40px; }
+  .brand-hero-content { flex-direction: column; text-align: center; }
+  .brand-avatar-premium { width: 130px; height: 130px; }
+  .products-grid { grid-template-columns: 1fr; }
+}
+
+
