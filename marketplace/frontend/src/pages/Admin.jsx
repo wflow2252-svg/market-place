@@ -65,14 +65,28 @@ const Admin = () => {
     if (!file) return;
     setAiAnalyzing(true);
     const reader = new FileReader();
-    reader.onload = async (event) => {
-      const imgUrl = event.target.result;
-      setBrandData(prev => ({ ...prev, logo: imgUrl }));
-      try {
-        const theme = await analyzeBrandImage(imgUrl);
-        setBrandData(prev => ({ ...prev, theme }));
-      } catch (err) { console.error('AI Analysis failed', err); }
-      finally { setAiAnalyzing(false); }
+    reader.onload = (event) => {
+      const img = new window.Image();
+      img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 500;
+        const scaleSize = MAX_WIDTH / img.width;
+        canvas.width = MAX_WIDTH;
+        canvas.height = img.height * scaleSize;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // Compress the image aggressively to avoid Vercel 4.5MB limit
+        const imgUrl = canvas.toDataURL('image/webp', 0.6);
+        
+        setBrandData(prev => ({ ...prev, logo: imgUrl }));
+        try {
+          const theme = await analyzeBrandImage(imgUrl);
+          setBrandData(prev => ({ ...prev, theme }));
+        } catch (err) { console.error('AI Analysis failed', err); }
+        finally { setAiAnalyzing(false); }
+      };
+      img.src = event.target.result;
     };
     reader.readAsDataURL(file);
   };
@@ -122,7 +136,8 @@ const Admin = () => {
         alert(data.message || 'خطأ في الإنشاء');
       }
     } catch (error) {
-      alert('خطأ في الاتصال بالخادم');
+      console.error('[Upload Request Error]', error);
+      alert('خطأ في الاتصال بالخادم، راجع الـ Console لمعرفة التفاصيل. السبب المحتمل: حجم البيانات أو مشكلة في الشبكة. الخطأ: ' + error.message);
     } finally {
       setLoading(false);
     }
