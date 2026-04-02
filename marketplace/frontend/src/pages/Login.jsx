@@ -42,7 +42,11 @@ const Login = () => {
           navigate('/');
         }
       } else {
-        setErrorMsg(data.message || 'بيانات غير صحيحة');
+        if (data.message && data.message.includes('تفعيل')) {
+          navigate('/activate-brand');
+        } else {
+          setErrorMsg(data.message || 'بيانات غير صحيحة');
+        }
       }
     } catch (err) {
       console.error('[Login Error]:', err);

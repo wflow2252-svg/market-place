@@ -125,6 +125,10 @@ const loginUser = async (req, res) => {
       return res.status(401).json({ success: false, message: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
     }
 
+    if (!user.isVerified) {
+      return res.status(401).json({ success: false, message: 'برجاء تفعيل الحساب أولاً باستخدام الكود من الإدارة' });
+    }
+
     res.json({
       success: true,
       message: 'تم تسجيل الدخول بنجاح',

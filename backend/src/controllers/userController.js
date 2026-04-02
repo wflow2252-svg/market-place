@@ -44,6 +44,7 @@ const createBrand = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     const brandUser = await prisma.user.create({
       data: {
@@ -51,7 +52,8 @@ const createBrand = async (req, res) => {
         email: email.toLowerCase(),
         password: hashedPassword,
         role: 'BRAND',
-        isVerified: true,
+        isVerified: false,
+        otp: otpCode
       },
     });
 
@@ -63,6 +65,7 @@ const createBrand = async (req, res) => {
         name: brandUser.name,
         email: brandUser.email,
         role: brandUser.role,
+        activationCode: otpCode
       },
     });
   } catch (error) {

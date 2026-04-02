@@ -70,6 +70,7 @@ function App() {
             {/* Auth Routes always open to allow admin login */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/activate-brand" element={<ActivateBrand />} />
             
             <Route 
               path="/profile" 
