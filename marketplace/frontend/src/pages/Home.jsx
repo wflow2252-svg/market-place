@@ -11,10 +11,10 @@ const Home = () => {
     const fetchBrands = async () => {
       try {
         const API_URL = import.meta.env.VITE_API_URL || '';
-        const res = await fetch(`${API_URL}/v1/users/brands`);
+        const res = await fetch(`${API_URL}/v1/brands`);
         const data = await res.json();
         if (data.success) {
-          setBrands(data.data);
+          setBrands(data.brands);
         }
       } catch (error) {
         console.error('Fetch brands failed:', error);

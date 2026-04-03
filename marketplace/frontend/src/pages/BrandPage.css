@@ -1,29 +1,29 @@
+/* ===== BRAND PAGE - PREMIUM DARK DESIGN ===== */
 .brand-page {
   animation: fadeIn 0.8s ease-out;
   min-height: 100vh;
-  color: var(--text-deep);
-  background-color: var(--bg-soft);
+  background: var(--bg-soft);
 }
 
-.brand-page.bold-noir { background-color: #ffffff; }
-.brand-page.classic-aurum { background-image: radial-gradient(circle at top right, rgba(212, 175, 55, 0.05), transparent); }
-
-/* Hero Section Elite 3.0 */
+/* ===== HERO SECTION ===== */
 .brand-hero {
   position: relative;
-  height: 400px;
+  min-height: 420px;
   display: flex;
   align-items: flex-end;
-  padding-bottom: 50px;
+  padding-bottom: 0;
   overflow: hidden;
-  background: white;
-  border-bottom: 1px solid #f1f5f9;
 }
 
 .brand-hero-overlay {
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(to top, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.4) 60%, transparent 100%);
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.15) 0%,
+    rgba(0, 0, 0, 0.5) 60%,
+    rgba(10, 10, 10, 0.95) 100%
+  );
   z-index: 1;
 }
 
@@ -31,80 +31,101 @@
   position: relative;
   z-index: 2;
   display: flex;
-  align-items: center;
-  gap: 40px;
+  align-items: flex-end;
+  gap: 36px;
   width: 100%;
+  padding: 50px 0 50px;
 }
 
-/* Avatar Premium V3 */
+/* ===== BRAND LOGO AVATAR ===== */
 .brand-avatar-premium {
-  width: 160px;
-  height: 160px;
-  padding: 6px;
+  width: 150px;
+  height: 150px;
+  flex-shrink: 0;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: visible;
-  background: white;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(20px);
   border-radius: 20px;
-  box-shadow: var(--shadow-soft);
-  border: 1px solid #f1f5f9;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  margin-bottom: 5px;
 }
 
 .brand-avatar-premium img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 16px;
+  border-radius: 18px;
 }
 
 .brand-initial {
-  font-size: 4rem;
-  font-weight: 800;
-  color: var(--text-deep);
+  font-size: 4.5rem;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .verified-badge-large {
   position: absolute;
-  bottom: -8px;
-  right: -8px;
-  background: white;
+  bottom: -10px;
+  right: -10px;
+  background: #fff;
   border-radius: 50%;
   padding: 4px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
-/* Info Elite */
+/* ===== BRAND INFO ===== */
 .brand-info {
-  max-width: 700px;
+  flex: 1;
 }
 
 .brand-title {
-  font-size: clamp(2.5rem, 5vw, 4rem);
-  margin-bottom: 10px;
-  color: var(--text-deep);
+  font-size: clamp(2.2rem, 5vw, 3.8rem);
+  margin-bottom: 8px;
   letter-spacing: -2px;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.5);
 }
 
 .brand-bio {
-  font-size: 1.1rem;
-  color: var(--text-muted);
-  line-height: 1.6;
-  margin-bottom: 20px;
+  font-size: 1.05rem;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.7;
+  margin-bottom: 18px;
+  max-width: 600px;
+}
+
+.brand-stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .brand-stats span {
-  padding: 8px 24px;
+  padding: 7px 20px;
+  font-size: 0.88rem;
   font-weight: 700;
-  background: #f1f5f9;
   border-radius: 30px;
-  color: var(--text-deep);
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(10px);
+  color: #fff;
 }
 
-/* Showcase Elite */
+.paused-badge {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  color: #f87171 !important;
+  border-color: rgba(248,113,113,0.4) !important;
+}
+
+/* ===== PRODUCTS SECTION ===== */
 .brand-showcase {
-  padding: 80px 0;
+  padding: 70px 0 80px;
 }
 
 .section-header-elite {
@@ -113,62 +134,44 @@
 }
 
 .section-header-elite h2 {
-  font-size: 2.2rem;
-  margin-bottom: 12px;
-  color: var(--text-deep);
+  font-size: 2rem;
+  margin-bottom: 14px;
 }
 
 .header-line-silver {
   width: 60px;
   height: 3px;
   margin: 0 auto;
-  background: var(--accent-silver);
+  border-radius: 2px;
 }
 
-/* Product Cards Elite 3.0 */
+/* ===== PRODUCT GRID ===== */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 30px;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: 28px;
 }
 
 .product-card-elite {
-  padding: 24px;
   background: white;
-  border-radius: var(--border-radius-xl);
-  transition: var(--transition-warm);
-  border: 1px solid var(--bg-beige);
-  box-shadow: var(--shadow-soft);
-  position: relative;
+  border-radius: 20px;
   overflow: hidden;
-}
-
-.product-card-elite::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(230, 126, 34, 0.05), transparent 70%);
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
-}
-
-.product-card-elite:hover::before {
-  opacity: 1;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .product-card-elite:hover {
-  transform: translateY(-8px) scale(1.01);
-  box-shadow: var(--shadow-hover);
-  border-color: var(--accent-orange);
+  transform: translateY(-8px);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.12);
 }
 
 .product-img-ph {
   width: 100%;
-  aspect-ratio: 1;
-  border-radius: 12px;
-  margin-bottom: 20px;
-  background: var(--bg-soft);
+  aspect-ratio: 1 / 1;
+  background: #f7f8fa;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -179,30 +182,131 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: var(--transition-luxe);
+  transition: transform 0.5s ease;
 }
 
 .product-card-elite:hover .product-img-ph img {
-  transform: scale(1.05);
+  transform: scale(1.06);
+}
+
+.placeholder-solid {
+  width: 100%;
+  height: 100%;
+}
+
+.product-details-elite {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .product-details-elite h4 {
-  font-size: 1.2rem;
-  margin-bottom: 8px;
+  font-size: 1.15rem;
+  margin-bottom: 6px;
   color: var(--text-deep);
 }
 
-.product-details-elite .price {
+.prod-desc {
+  font-size: 0.85rem;
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
+
+.price {
   font-size: 1.4rem;
   font-weight: 800;
-  color: var(--text-deep);
+  margin-bottom: 8px;
 }
 
-@media (max-width: 900px) {
-  .brand-hero { height: auto; padding-top: 100px; padding-bottom: 40px; }
-  .brand-hero-content { flex-direction: column; text-align: center; }
-  .brand-avatar-premium { width: 130px; height: 130px; }
-  .products-grid { grid-template-columns: 1fr; }
+.stock-badge {
+  font-size: 0.78rem;
+  color: #6b7280;
+  margin-bottom: 6px;
 }
 
+/* Button */
+.btn-luxe {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  background: var(--btn-color, #c9a84c);
+  color: #fff;
+}
 
+.btn-luxe:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+
+.btn-luxe.full-width { width: 100%; }
+.btn-luxe.mt-3 { margin-top: 10px; }
+
+/* ===== EMPTY STATE ===== */
+.empty-catalog {
+  padding: 80px 40px;
+  border-radius: 20px;
+  max-width: 500px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.empty-catalog h3 {
+  font-size: 1.5rem;
+}
+
+/* ===== LOADING & ERROR ===== */
+.brand-page-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+}
+
+.brand-page-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  color: #ef4444;
+  font-size: 1.2rem;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .brand-hero { min-height: auto; }
+  .brand-hero-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 40px 0 40px;
+    gap: 20px;
+  }
+  .brand-avatar-premium { width: 120px; height: 120px; }
+  .brand-title { font-size: 2rem; letter-spacing: -1px; }
+  .brand-bio { font-size: 0.95rem; }
+  .brand-stats { justify-content: center; }
+  .products-grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 18px; }
+  .brand-showcase { padding: 50px 0; }
+}

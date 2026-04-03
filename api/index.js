@@ -26,10 +26,12 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 const authRoutes = require(path.join(__dirname, '../backend/src/routes/authRoutes'));
 const userRoutes = require(path.join(__dirname, '../backend/src/routes/userRoutes'));
 const productRoutes = require(path.join(__dirname, '../backend/src/routes/productRoutes'));
+const brandRoutes = require(path.join(__dirname, '../backend/src/routes/brandRoutes'));
 
 app.use('/v1/auth', authRoutes);
 app.use('/v1/users', userRoutes);
 app.use('/v1/products', productRoutes);
+app.use('/v1/brands', brandRoutes);
 
 // ✅ Health Check
 app.get('/v1/health', async (req, res) => {

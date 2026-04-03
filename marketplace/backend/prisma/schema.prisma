@@ -6,9 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -22,22 +21,20 @@ model User {
   otpExpiresAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  // Brand Fields (Only used if role == BRAND)
-  brandLogo        String?
-  brandBanner      String?
-  brandDescription String?
-  brandTheme       String?  // JSON string containing AI-generated color palettes & fonts
-
+  brandProfile BrandProfile?
   orders    Order[]
   products  Product[] @relation("BrandProducts")
 }
 
-model SiteSettings {
-  id            Int      @id @default(autoincrement())
-  isMaintenance Boolean  @default(false)
-  maintenanceMsg String? @default("عذراً، الموقع تحت الصيانة حالياً. سنعود قريباً!")
-  updatedAt     DateTime @updatedAt
+model BrandProfile {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logo        String?  // Base64 logo
+  banner      String?  // Base64 banner 
+  description String?  // Brand description
+  theme       String?  // JSON string storing colors { primary: "#fff" }
+  isPaused    Boolean  @default(false)
 }
 
 model Product {

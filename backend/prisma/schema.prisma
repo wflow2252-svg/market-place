@@ -22,8 +22,20 @@ model User {
   otpExpiresAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  brandProfile BrandProfile?
   orders    Order[]
   products  Product[] @relation("BrandProducts")
+}
+
+model BrandProfile {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logo        String?  // Base64 logo
+  banner      String?  // Base64 banner 
+  description String?  // Brand description
+  theme       String?  // JSON string storing colors { primary: "#fff" }
+  isPaused    Boolean  @default(false)
 }
 
 model Product {

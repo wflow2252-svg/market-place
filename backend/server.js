@@ -54,10 +54,12 @@ app.use('/v1/auth/login', loginLimiter);
 const authRoutes = require('./src/routes/authRoutes');
 const productRoutes = require('./src/routes/productRoutes');
 const userRoutes = require('./src/routes/userRoutes');
+const brandRoutes = require('./src/routes/brandRoutes');
 
 app.use('/v1/auth', authRoutes);
 app.use('/v1/products', productRoutes);
 app.use('/v1/users', userRoutes);
+app.use('/v1/brands', brandRoutes);
 
 // Setup Health Check
 app.get('/v1/health', async (req, res) => {

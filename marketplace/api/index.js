@@ -140,7 +140,7 @@ const getUsers = async (req, res) => {
 
 const createBrand = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, brandLogo, brandBanner, brandDescription, brandTheme } = req.body;
     if (!name || !email || !password) return res.status(400).json({ success: false, message: 'يرجى إدخال جميع البيانات' });
 
     const userExists = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
@@ -158,7 +158,15 @@ const createBrand = async (req, res) => {
         password: hashedPassword,
         role: 'BRAND',
         isVerified: false, // Wait for activation code
-        otp: otpCode
+        otp: otpCode,
+        brandProfile: {
+          create: {
+            logo: brandLogo || null,
+            banner: brandBanner || null,
+            description: brandDescription || null,
+            theme: brandTheme || null
+          }
+        }
       },
     });
 
@@ -172,7 +180,184 @@ const createBrand = async (req, res) => {
   }
 };
 
+// ================= BRAND DASHBOARD CONTROLLERS ================= //
+
+const getBrandProfile = async (req, res) => {
+  try {
+    if (req.user.role !== 'BRAND') return res.status(403).json({ success: false, message: 'غير مصرح' });
+    let profile = await prisma.brandProfile.findUnique({ where: { userId: req.user.id } });
+    if (!profile) {
+      profile = await prisma.brandProfile.create({ data: { userId: req.user.id } });
+    }
+    res.json({ success: true, profile });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+const updateBrandProfile = async (req, res) => {
+  try {
+    if (req.user.role !== 'BRAND') return res.status(403).json({ success: false, message: 'غير مصرح' });
+    const { logo, banner, description, theme, isPaused } = req.body;
+    const updated = await prisma.brandProfile.upsert({
+      where: { userId: req.user.id },
+      update: { logo, banner, description, theme, isPaused: isPaused ?? false },
+      create: { userId: req.user.id, logo, banner, description, theme, isPaused: isPaused ?? false }
+    });
+    res.json({ success: true, profile: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+const getBrandProducts = async (req, res) => {
+  try {
+    if (req.user.role !== 'BRAND') return res.status(403).json({ success: false, message: 'غير مصرح' });
+    const products = await prisma.product.findMany({
+      where: { brandId: req.user.id },
+      orderBy: { createdAt: 'desc' },
+      include: { category: true }
+    });
+    res.json({ success: true, count: products.length, products });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+const createProduct = async (req, res) => {
+  try {
+    if (req.user.role !== 'BRAND') return res.status(403).json({ success: false, message: 'غير مصرح' });
+    const { name, description, price, stock, images } = req.body;
+    if (!name || price == null) return res.status(400).json({ success: false, message: 'الاسم والسعر مطلوبان' });
+    
+    const newProduct = await prisma.product.create({
+      data: {
+        name,
+        description,
+        price: parseFloat(price),
+        stock: parseInt(stock || 0),
+        images,
+        brandId: req.user.id
+      }
+    });
+    res.status(201).json({ success: true, product: newProduct });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+const updateProduct = async (req, res) => {
+  try {
+    if (req.user.role !== 'BRAND') return res.status(403).json({ success: false, message: 'غير مصرح' });
+    const productId = parseInt(req.params.id);
+    const { name, description, price, stock, images } = req.body;
+    
+    // Ensure product belongs to logged-in brand
+    const existing = await prisma.product.findUnique({ where: { id: productId } });
+    if (!existing || existing.brandId !== req.user.id) {
+       return res.status(404).json({ success: false, message: 'المنتج غير موجود أو لا تملك صلاحية تعديله' });
+    }
+
+    const updated = await prisma.product.update({
+      where: { id: productId },
+      data: {
+        name: name || existing.name,
+        description: description ?? existing.description,
+        price: price != null ? parseFloat(price) : existing.price,
+        stock: stock != null ? parseInt(stock) : existing.stock,
+        images: images != null ? images : existing.images
+      }
+    });
+    res.json({ success: true, product: updated });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+const deleteProduct = async (req, res) => {
+  try {
+    if (req.user.role !== 'BRAND') return res.status(403).json({ success: false, message: 'غير مصرح' });
+    const productId = parseInt(req.params.id);
+    const existing = await prisma.product.findUnique({ where: { id: productId } });
+    if (!existing || existing.brandId !== req.user.id) {
+       return res.status(404).json({ success: false, message: 'المنتج غير موجود أو لا تملك صلاحية تعديله' });
+    }
+    await prisma.product.delete({ where: { id: productId } });
+    res.json({ success: true, message: 'تم مسح المنتج بنجاح' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+const getBrandOrders = async (req, res) => {
+  try {
+    if (req.user.role !== 'BRAND') return res.status(403).json({ success: false, message: 'غير مصرح' });
+    // Find all OrderItems linked to products owned by this brand
+    const orderItems = await prisma.orderItem.findMany({
+      where: { product: { brandId: req.user.id } },
+      include: {
+        product: true,
+        order: {
+          include: { user: { select: { id: true, name: true, email: true } } }
+        }
+      },
+      orderBy: { order: { createdAt: 'desc' } }
+    });
+    res.json({ success: true, count: orderItems.length, orderItems });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+const getAllBrands = async (req, res) => {
+  try {
+    const brands = await prisma.user.findMany({
+      where: { role: 'BRAND', isVerified: true },
+      select: {
+        id: true,
+        name: true,
+        brandProfile: {
+          select: { logo: true, banner: true, description: true, isPaused: true }
+        }
+      }
+    });
+    
+    // Filter out paused brands
+    const activeBrands = brands.filter(b => !b.brandProfile?.isPaused);
+    
+    res.json({ success: true, count: activeBrands.length, brands: activeBrands });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // 5️⃣ المسارات (Routes)
+
+const getBrandById = async (req, res) => {
+  try {
+    const brandId = parseInt(req.params.id);
+    const brand = await prisma.user.findFirst({
+      where: { id: brandId, role: 'BRAND', isVerified: true },
+      select: {
+        id: true,
+        name: true,
+        brandProfile: {
+          select: { logo: true, banner: true, description: true, theme: true, isPaused: true }
+        },
+        products: {
+          select: { id: true, name: true, description: true, price: true, stock: true, images: true },
+          orderBy: { createdAt: 'desc' }
+        }
+      }
+    });
+
+    if (!brand) return res.status(404).json({ success: false, message: 'الماركة غير موجودة أو غير مفعلة' });
+    res.json({ success: true, brand });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 app.post('/v1/auth/login', loginUser);
 app.post('/v1/auth/register', registerUser);
 app.post('/v1/auth/verify-otp', verifyOtp);
@@ -180,6 +365,18 @@ app.get('/v1/auth/profile', protect, (req, res) => res.json({ success: true, pro
 
 app.get('/v1/users', protect, getUsers);
 app.post('/v1/users/brand', protect, createBrand);
+
+// Brand Panel API Endpoints
+app.get('/v1/brand/profile', protect, getBrandProfile);
+app.put('/v1/brand/profile', protect, updateBrandProfile);
+app.get('/v1/brand/products', protect, getBrandProducts);
+app.post('/v1/brand/products', protect, createProduct);
+app.put('/v1/brand/products/:id', protect, updateProduct);
+app.delete('/v1/brand/products/:id', protect, deleteProduct);
+app.get('/v1/brand/orders', protect, getBrandOrders);
+app.get('/v1/brands', getAllBrands);
+app.get('/v1/brands/:id', getBrandById);
+
 
 // ✅ Health Check
 app.get('/v1/health', async (req, res) => {
