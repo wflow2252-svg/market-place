@@ -50,4 +50,3 @@ echo ============================================================
 echo   MASTER REPAIR FINISHED! 🚀
 echo   Your site should now be live at: https://mplace.vercel.app
 echo ============================================================
-pause
