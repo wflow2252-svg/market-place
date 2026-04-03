@@ -42,7 +42,11 @@ const Login = () => {
           navigate('/');
         }
       } else {
-        setErrorMsg(data.message || 'بيانات غير صحيحة');
+        if (data.message && data.message.includes('تفعيل')) {
+          navigate('/activate-brand');
+        } else {
+          setErrorMsg(data.message || 'بيانات غير صحيحة');
+        }
       }
     } catch (err) {
       console.error('[Login Error]:', err);
@@ -55,8 +59,8 @@ const Login = () => {
   return (
     <div className="auth-page">
       <div className="auth-container card">
-        <h2 className="text-primary">تسجيل الدخول</h2>
-        <p className="auth-subtitle">مرحباً بك مجدداً في LuxeBrands</p>
+        <h2 className="title-serif text-gradient-warm">تسجيل الدخول</h2>
+        <p className="auth-subtitle">مرحباً بك مجدداً في MarketPlace ماركت بليس</p>
 
         {errorMsg && (
           <div className="error-banner">

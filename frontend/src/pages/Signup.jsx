@@ -27,10 +27,9 @@ const Signup = () => {
     }
 
     try {
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      let otp = Math.floor(100000 + Math.random() * 900000).toString();
       setSentOtp(otp);
 
-      // EmailJS Keys
       const serviceId = 'service_tk56i38';
       const templateId = 'template_3dg7xwf';
       const publicKey = 'dn3k8BnELCrmPi6cU';
@@ -42,12 +41,13 @@ const Signup = () => {
           { name: formData.name, to_email: formData.email, otp },
           publicKey
         );
-        setStep(2);
       } catch (emailErr) {
         console.error('[EmailJS Error]:', emailErr);
-        // ✅ لو EmailJS فشل - نوضح للمستخدم بدل الـ bypass الصامت
         setErrorMsg('تعذر إرسال رمز التحقق. تأكد من صحة البريد الإلكتروني وحاول مرة أخرى.');
+        setLoading(false);
+        return;
       }
+      setStep(2);
     } catch (error) {
       console.error('[Signup Error]:', error);
       setErrorMsg('حدث خطأ غير متوقع، يرجى المحاولة مرة أخرى.');

@@ -33,11 +33,15 @@ const registerUser = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // ✅ إعطاء صلاحية الأدمن تلقائياً للإيميل الحقيقي الخاص بك
+    const assignedRole = email.toLowerCase() === 'zomatube2012@gmail.com' ? 'ADMIN' : 'USER';
+
     const user = await prisma.user.create({
       data: {
         name,
         email: email.toLowerCase(),
         password: hashedPassword,
+        role: assignedRole,
         isVerified: true,
       },
     });
@@ -56,7 +60,11 @@ const registerUser = async (req, res) => {
 
   } catch (error) {
     console.error(`[Signup Error]: ${error.message}`);
-    res.status(500).json({ success: false, message: 'خطأ في الخادم، يرجى المحاولة مرة أخرى' });
+    res.status(500).json({ 
+      success: false, 
+      message: `خطأ في الخادم: ${error.message}`,
+      debug: { stack: error.stack }
+    });
   }
 };
 
@@ -123,10 +131,6 @@ const loginUser = async (req, res) => {
 
     if (!isMatch) {
       return res.status(401).json({ success: false, message: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
-    }
-
-    if (!user.isVerified) {
-      return res.status(401).json({ success: false, message: 'برجاء تفعيل الحساب أولاً باستخدام الكود من الإدارة' });
     }
 
     res.json({

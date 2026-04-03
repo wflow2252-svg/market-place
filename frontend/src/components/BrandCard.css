@@ -1,141 +1,78 @@
-/* ── Brand Card — Figma Style ───────────────────────────── */
-.brand-card-figma {
+.brand-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
   position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  background: #e5e5e5;
-  border-radius: 20px;
-  padding: 22px 24px;
-  min-height: 160px;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
-  text-decoration: none;
-  color: inherit;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  height: 100%;
 }
 
-.brand-card-figma:hover {
-  transform: translateY(-4px) scale(1.01);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.16);
-  background: #d8d8d8;
+.brand-promoted {
+  border: 1px solid #fde68a;
 }
 
-.brand-card-figma.brand-promoted {
-  background: #e8e0f0;
-  border: 2px solid #c084fc30;
-}
-
-.brand-card-figma.brand-paused {
-  opacity: 0.65;
-  filter: grayscale(30%);
-}
-
-/* Promoted Badge */
-.bc-promoted-badge {
+.brand-badge {
   position: absolute;
-  top: 14px;
-  left: 14px;
-  display: inline-flex;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+}
+
+.brand-logo-container {
+  height: 160px;
+  display: flex;
   align-items: center;
-  gap: 4px;
-  background: #7c3aed;
-  color: #fff;
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 20px;
+  justify-content: center;
+  background-color: var(--bg-color);
+  border-bottom: 1px solid var(--border-light);
 }
 
-/* Paused overlay */
-.bc-paused-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.06);
-  display: flex;
-  align-items: flex-end;
-  padding: 14px;
-  border-radius: 20px;
-  z-index: 2;
-}
-.bc-paused-overlay span {
-  background: #fee2e2;
-  color: #dc2626;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 10px;
-}
-
-/* Top row */
-.bc-top-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 8px;
-  z-index: 1;
-}
-
-.bc-name-block {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.bc-name {
-  font-size: 1.05rem;
-  font-weight: 900;
-  color: #1a1a1a;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  line-height: 1.2;
-}
-
-.bc-title {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #555;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  max-width: 160px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.bc-eval {
-  font-size: 0.78rem;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  flex-shrink: 0;
-}
-
-/* Logo bottom-right */
-.bc-logo-wrap {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 16px;
-  z-index: 1;
-}
-
-.bc-logo-img {
-  width: 72px;
-  height: 72px;
-  object-fit: contain;
-  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.18));
-}
-
-.bc-logo-ph {
-  width: 68px;
-  height: 68px;
-  border-radius: 16px;
+.logo-placeholder {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 2rem;
-  font-weight: 900;
-  color: #fff;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  font-weight: 800;
+  background-color: var(--bg-white);
+  box-shadow: var(--shadow-sm);
+  text-transform: uppercase;
+}
+
+.brand-info {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.brand-info h3 {
+  font-size: 1.25rem;
+  margin-bottom: 4px;
+}
+
+.brand-category {
+  color: var(--text-gray);
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+}
+
+.brand-action {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: var(--transition);
+}
+
+.brand-card:hover .brand-action {
+  transform: translateX(-5px);
+}
+
+[dir="rtl"] .brand-card:hover .brand-action {
+  transform: translateX(5px);
 }

@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "name": "marketplace-elite-final",
   "alias": ["mplace.vercel.app"],
   "functions": {
     "api/index.js": {
@@ -10,6 +11,14 @@
     {
       "source": "/v1/(.*)",
       "destination": "/api/index.js"
+    },
+    {
+      "source": "/index.html",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/assets/(.*)",
+      "destination": "/assets/$1"
     },
     {
       "source": "/(.*)",

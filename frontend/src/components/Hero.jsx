@@ -1,45 +1,56 @@
-import { ArrowRight, ShoppingBag, TrendingUp } from 'lucide-react';
+import { ArrowRight, ShoppingBag, TrendingUp, Sparkles, ShieldCheck, Zap } from 'lucide-react';
 import './Hero.css';
 
 const Hero = () => {
   return (
-    <section className="hero-modern">
+    <section className="hero-modern animate-fade">
+      {/* Dynamic Background Blobs */}
+      <div className="hero-blob blob-1"></div>
+      <div className="hero-blob blob-2"></div>
+      
       <div className="hero-content">
-        <div className="badge-promo-top">
-          <TrendingUp size={16} /> المنصة الأولى للماركات في الشرق الأوسط
+        <div className="badge-promo-top glass-panel animate-float-slow">
+          <ShieldCheck size={16} color="var(--accent-brown)" /> MarketPlace - وجهتك الودودة للماركات العالمية والمحلية في مصر
         </div>
-        <h1>تجربة تسوق فريدة لأرقى <span className="text-primary">العلامات التجارية</span></h1>
-        <p className="hero-subtitle">
-          اكتشف أحدث المنتجات من أشهر الماركات العالمية والمحلية في مكان واحد. تسوق بأمان وبثقة مع خدمات التوصيل السريع وضمان الجودة.
+        <h1 className="text-gradient-warm animate-fade-in stagger-1">أقوى البراندات العالمية <br/> <span className="text-accent-orange">والمحلية في مصر</span></h1>
+        <p className="hero-subtitle animate-fade-in stagger-2">
+          استمتع بتجربة تسوق آمنة ومريحة. بنقدملك أرقى تشكيلات الماركات العالمية والمحلية بضمان الجودة، وسرعة في التوصيل لكل محافظات مصر.
         </p>
-        <div className="hero-actions">
-          <button className="btn btn-primary btn-lg">
-            تصفح الماركات <ArrowRight size={20} />
+        <div className="hero-actions animate-fade-in stagger-3">
+          <button className="btn-luxe shine-button">
+            اشتري دلوقتي <ArrowRight size={20} />
           </button>
-          <button className="btn btn-outline btn-lg">
-            أفضل العروض
+          <button className="btn-outline-warm glass-panel">
+            اكتشف العروض
           </button>
         </div>
-        <div className="hero-stats">
-          <div className="stat">
-            <span className="stat-num">+500</span>
-            <span className="stat-label">ماركة مسجلة</span>
+        <div className="hero-stats animate-fade-in stagger-4">
+          <div className="stat glass-panel">
+            <span className="stat-num text-gradient-warm">+500</span>
+            <span className="stat-label">براند في مصر</span>
           </div>
-          <div className="stat">
-            <span className="stat-num">+10k</span>
-            <span className="stat-label">منتج أصلي</span>
+          <div className="stat glass-panel">
+            <span className="stat-num text-gradient-warm">+10k</span>
+            <span className="stat-label">قطعة مختارة</span>
           </div>
-          <div className="stat">
-            <span className="stat-num">24/7</span>
-            <span className="stat-label">دعم فني</span>
+          <div className="stat glass-panel">
+            <span className="stat-num text-gradient-warm">24/7</span>
+            <span className="stat-label">دعم دائم</span>
           </div>
         </div>
       </div>
       
-      <div className="hero-image-wrapper">
-        <div className="hero-image-ph card">
-          <ShoppingBag size={80} className="text-gray" opacity={0.2} />
-          <h3>مساحة عرض المنتجات المروجة</h3>
+      <div className="hero-image-wrapper animate-fade-in stagger-2">
+        <div className="hero-floating-card glass-panel animate-luxe">
+          <div className="luxury-icon-box">
+            <Zap size={40} color="var(--accent-orange)" />
+          </div>
+          <h3>تسوق بذكاء رقيق</h3>
+          <p>تخصيص الهوية الذكي بلمسات دافئة</p>
+        </div>
+        <div className="hero-main-card glass-panel">
+          <ShoppingBag size={120} className="text-gray" style={{ opacity: 0.1 }} />
+          <div className="hero-decoration"></div>
         </div>
       </div>
     </section>

@@ -1,32 +1,27 @@
 const express = require('express');
 const router = express.Router();
-const {
-  getBrands, getBrandById,
-  getMyProfile, updateMyProfile, togglePause, adminTogglePause,
-  getMyProducts, addMyProduct, updateMyProduct, deleteMyProduct
-} = require('../controllers/brandController');
-const { protect, admin } = require('../middlewares/authMiddleware');
+const brandController = require('../controllers/brandController');
+const productController = require('../controllers/productController');
+const { protect } = require('../middlewares/authMiddleware');
 
-// middleware يتحقق إن المستخدم براند
-const brandOnly = (req, res, next) => {
-  if (req.user && (req.user.role === 'BRAND' || req.user.role === 'ADMIN')) return next();
-  return res.status(403).json({ success: false, message: 'هذا المسار للبراندات فقط' });
-};
+// Public Root (List all verified brands)
+router.get('/', brandController.getBrands);
 
-// Public
-router.get('/', getBrands);
-router.get('/:id', getBrandById);
+// Public Specific Brand (Profile + Products)
+router.get('/:id', brandController.getBrandProfilePublic);
 
-// Brand self-management
-router.get('/me/profile', protect, brandOnly, getMyProfile);
-router.put('/me/profile', protect, brandOnly, updateMyProfile);
-router.patch('/me/pause', protect, brandOnly, togglePause);
-router.get('/me/products', protect, brandOnly, getMyProducts);
-router.post('/me/products', protect, brandOnly, addMyProduct);
-router.put('/me/products/:id', protect, brandOnly, updateMyProduct);
-router.delete('/me/products/:id', protect, brandOnly, deleteMyProduct);
+// Private Brand Owner Profile
+router.route('/profile')
+  .get(protect, brandController.getBrandProfile)
+  .put(protect, brandController.updateBrandProfile);
 
-// Admin actions on brand
-router.patch('/:id/pause', protect, admin, adminTogglePause);
+// Private Brand Owner Products (CRUD)
+router.route('/products')
+  .get(protect, productController.getBrandProducts)
+  .post(protect, productController.createProduct);
+
+router.route('/products/:id')
+  .put(protect, productController.updateProduct)
+  .delete(protect, productController.deleteProduct);
 
 module.exports = router;

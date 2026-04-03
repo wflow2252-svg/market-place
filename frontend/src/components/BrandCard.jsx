@@ -1,52 +1,36 @@
 import { Link } from 'react-router-dom';
-import { BadgeCheck } from 'lucide-react';
+import { BadgeCheck, ArrowLeft } from 'lucide-react';
 import './BrandCard.css';
 
 const BrandCard = ({ brand }) => {
-  const theme = brand.brandProfile?.theme
-    ? (() => { try { return JSON.parse(brand.brandProfile.theme); } catch { return {}; } })()
-    : {};
-  const color    = theme.primary || brand.color || '#2563eb';
-  const logo     = brand.brandProfile?.logo || null;
-  const isPaused = brand.brandProfile?.isPaused || false;
-  const count    = brand._count?.products ?? 0;
+  // AI Theme color extraction
+  let primaryColor = '#3b82f6';
+  if (brand.brandProfile?.theme) {
+    try {
+      const theme = JSON.parse(brand.brandProfile.theme);
+      primaryColor = theme.primaryColor || theme.primary || primaryColor;
+    } catch (e) {}
+  }
 
   return (
-    <Link
-      to={`/brand/${brand.id}`}
-      className={`brand-card-figma ${brand.promoted ? 'brand-promoted' : ''} ${isPaused ? 'brand-paused' : ''}`}
-    >
-      {/* Promoted Badge */}
-      {brand.promoted && (
-        <span className="bc-promoted-badge">
-          <BadgeCheck size={12}/> مميز
-        </span>
-      )}
-
-      {/* Paused Overlay */}
-      {isPaused && <div className="bc-paused-overlay"><span>متجر موقوف مؤقتاً</span></div>}
-
-      {/* Top Row: Name + Label */}
-      <div className="bc-top-row">
-        <div className="bc-name-block">
-          <span className="bc-name">{brand.name}</span>
-          <span className="bc-title">{brand.category || brand.brandProfile?.description?.slice(0, 30) || 'علامة تجارية'}</span>
-        </div>
-        <span className="bc-eval" style={{ color }}>
-          {count > 0 ? `${count} منتج` : 'جديد'}
-        </span>
+    <Link to={`/brand/${brand.id}`} className="brand-card glass-panel animate-float">
+      <div className="brand-logo-wrapper" style={{ backgroundColor: `${primaryColor}10` }}>
+        {brand.brandProfile?.logo ? (
+          <img src={brand.brandProfile.logo} alt={brand.name} className="brand-card-logo" />
+        ) : (
+          <div className="logo-placeholder-premium" style={{ color: primaryColor, borderColor: `${primaryColor}30` }}>
+            {brand.name.charAt(0).toUpperCase()}
+          </div>
+        )}
       </div>
-
-      {/* Bottom: Logo */}
-      <div className="bc-logo-wrap">
-        {logo
-          ? <img src={logo} alt={brand.name} className="bc-logo-img"/>
-          : (
-            <div className="bc-logo-ph" style={{ background: color }}>
-              {brand.name.charAt(0).toUpperCase()}
-            </div>
-          )
-        }
+      
+      <div className="brand-card-info">
+        <h3 className="text-gradient" style={{ fontSize: '1.4rem' }}>{brand.name}</h3>
+        <p className="brand-category">{brand.brandProfile?.description?.slice(0, 40) || 'ماركة فاخرة موثقة'}...</p>
+        <div className="brand-action-link" style={{ color: primaryColor }}>
+          <span>استكشاف المجموعة</span>
+          <ArrowLeft size={16} />
+        </div>
       </div>
     </Link>
   );

@@ -14,112 +14,49 @@ const getUsers = async (req, res) => {
         role: true,
         isVerified: true,
         createdAt: true,
-        updatedAt: true,
-        brandProfile: {
-          select: { isPaused: true, logo: true }
-        },
-        _count: { select: { products: true } }
       },
       orderBy: { createdAt: 'desc' },
     });
     res.json({ success: true, count: users.length, users });
   } catch (error) {
-    console.error(`[getUsers Error]: ${error.message}`);
     res.status(500).json({ success: false, message: 'خطأ في جلب المستخدمين' });
   }
 };
 
-// @desc    Delete a user
-// @route   DELETE /v1/users/:id
-// @access  Private/Admin
-const deleteUser = async (req, res) => {
+// @desc    Get all active/verified brands
+// @route   GET /v1/users/brands
+// @access  Public
+const getBrands = async (req, res) => {
   try {
-    const id = parseInt(req.params.id);
-    const user = await prisma.user.findUnique({ where: { id } });
-    if (!user) return res.status(404).json({ success: false, message: 'المستخدم غير موجود' });
-    if (user.role === 'ADMIN') return res.status(403).json({ success: false, message: 'لا يمكن حذف حساب الأدمن' });
-
-    await prisma.user.delete({ where: { id } });
-    res.json({ success: true, message: 'تم حذف المستخدم بنجاح' });
-  } catch (error) {
-    console.error(`[deleteUser Error]: ${error.message}`);
-    res.status(500).json({ success: false, message: 'خطأ في حذف المستخدم' });
-  }
-};
-
-// @desc    Update user role
-// @route   PATCH /v1/users/:id/role
-// @access  Private/Admin
-const updateUserRole = async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    const { role } = req.body;
-    const validRoles = ['USER', 'BRAND', 'ADMIN'];
-    if (!validRoles.includes(role)) {
-      return res.status(400).json({ success: false, message: 'دور غير صالح' });
-    }
-
-    const user = await prisma.user.update({
-      where: { id },
-      data: { role },
-      select: { id: true, name: true, role: true }
+    const brands = await prisma.user.findMany({
+      where: { role: 'BRAND', isVerified: true },
+      select: {
+        id: true,
+        name: true,
+        brandProfile: { select: { logo: true, description: true } }
+      },
+      orderBy: { createdAt: 'desc' },
     });
-
-    // إذا أصبح BRAND، أنشئ BrandProfile له تلقائياً
-    if (role === 'BRAND') {
-      const existing = await prisma.brandProfile.findUnique({ where: { userId: id } });
-      if (!existing) {
-        await prisma.brandProfile.create({ data: { userId: id } });
-      }
-    }
-
-    res.json({ success: true, message: 'تم تحديث الدور بنجاح', user });
+    res.json({ success: true, count: brands.length, data: brands });
   } catch (error) {
-    console.error(`[updateUserRole Error]: ${error.message}`);
-    res.status(500).json({ success: false, message: 'خطأ في تحديث الدور' });
+    res.status(500).json({ success: false, message: 'خطأ في جلب الماركات' });
   }
 };
 
-// @desc    Toggle user verification
-// @route   PATCH /v1/users/:id/verify
-// @access  Private/Admin
-const toggleVerify = async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    const user = await prisma.user.findUnique({ where: { id } });
-    if (!user) return res.status(404).json({ success: false, message: 'المستخدم غير موجود' });
-
-    const updated = await prisma.user.update({
-      where: { id },
-      data: { isVerified: !user.isVerified },
-      select: { id: true, name: true, isVerified: true }
-    });
-
-    res.json({ success: true, message: `تم ${updated.isVerified ? 'تفعيل' : 'إلغاء تفعيل'} الحساب`, user: updated });
-  } catch (error) {
-    console.error(`[toggleVerify Error]: ${error.message}`);
-    res.status(500).json({ success: false, message: 'خطأ في تحديث الحالة' });
-  }
-};
-
-// @desc    Create a new brand account
+// @desc    Create a new brand account (unverified)
 // @route   POST /v1/users/brand
 // @access  Private/Admin
 const createBrand = async (req, res) => {
   try {
     const { name, email, password } = req.body;
-
-    if (!name || !email || !password) {
-      return res.status(400).json({ success: false, message: 'يرجى إدخال جميع البيانات' });
-    }
+    if (!name || !email || !password) return res.status(400).json({ success: false, message: 'يرجى إدخال جميع البيانات' });
 
     const userExists = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
-    if (userExists) {
-      return res.status(400).json({ success: false, message: 'البريد الإلكتروني مسجل مسبقاً' });
-    }
+    if (userExists) return res.status(400).json({ success: false, message: 'البريد الإلكتروني مسجل مسبقاً' });
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+    const activationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     const brandUser = await prisma.user.create({
       data: {
@@ -127,25 +64,126 @@ const createBrand = async (req, res) => {
         email: email.toLowerCase(),
         password: hashedPassword,
         role: 'BRAND',
-        isVerified: true, // Admin-created brands are pre-verified
-        brandProfile: { create: {} } // Create empty profile automatically
+        isVerified: false,
+        otp: activationCode,
+        brandProfile: { create: {} }
       },
     });
 
-    res.status(201).json({
-      success: true,
-      message: 'تم إنشاء حساب البراند بنجاح!',
-      brand: {
-        id: brandUser.id,
-        name: brandUser.name,
-        email: brandUser.email,
-        role: brandUser.role,
-      },
-    });
+    res.status(201).json({ success: true, message: 'تم إنشاء البراند بنجاح', brand: { id: brandUser.id, activationCode } });
   } catch (error) {
-    console.error(`[createBrand Error]: ${error.message}`);
-    res.status(500).json({ success: false, message: 'خطأ في إنشاء البراند' });
+    res.status(500).json({ success: false, message: 'خطأ في إنشاء البراند: ' + error.message });
   }
 };
 
-module.exports = { getUsers, deleteUser, updateUserRole, toggleVerify, createBrand };
+// @desc    Create a premium brand (Elite Init)
+// @route   POST /v1/elite-brand-init
+// @access  Private/Admin
+const createBrandLuxe = async (req, res) => {
+  try {
+    const { name, email, password, brandLogo, brandBanner, brandDescription, brandTheme } = req.body;
+    
+    if (!name || !email || !password) {
+      return res.status(400).json({ success: false, message: 'يرجى إدخال البيانات الأساسية' });
+    }
+
+    const userExists = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+    if (userExists) return res.status(400).json({ success: false, message: 'البريد الإلكتروني مسجل مسبقاً' });
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    const activationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Create User and Profile in one transaction
+    const brandUser = await prisma.user.create({
+      data: {
+        name,
+        email: email.toLowerCase(),
+        password: hashedPassword,
+        role: 'BRAND',
+        isVerified: false,
+        otp: activationCode,
+        brandProfile: {
+          create: {
+            logo: brandLogo,
+            banner: brandBanner,
+            description: brandDescription,
+            theme: brandTheme
+          }
+        }
+      }
+    });
+
+    res.status(201).json({ 
+      success: true, 
+      message: 'تم تدشين الماركة النخبوية بنجاح بنجاح', 
+      brand: { id: brandUser.id, activationCode } 
+    });
+  } catch (error) {
+    console.error('[Elite Brand Init Error]:', error);
+    res.status(500).json({ success: false, message: 'خطأ في التدشين: ' + error.message });
+  }
+};
+
+// @desc    Delete user
+// @access  Private/Admin
+const deleteUser = async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: parseInt(req.params.id) } });
+    if (!user) return res.status(404).json({ success: false, message: 'المستخدم غير موجود' });
+    await prisma.user.delete({ where: { id: parseInt(req.params.id) } });
+    res.json({ success: true, message: 'تم حذف المستخدم بنجاح' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ في الحذف' });
+  }
+};
+
+// @desc    Toggle verification status
+// @access  Private/Admin
+const toggleVerify = async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: parseInt(req.params.id) } });
+    if (!user) return res.status(404).json({ success: false, message: 'المستخدم غير موجود' });
+    const updated = await prisma.user.update({
+      where: { id: parseInt(req.params.id) },
+      data: { isVerified: !user.isVerified }
+    });
+    res.json({ success: true, message: `تم تحديث حالة التفعيل إلى ${updated.isVerified}` });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ في التفعيل' });
+  }
+};
+
+// @desc    Update user role
+// @access  Private/Admin
+const updateUserRole = async (req, res) => {
+  try {
+    const { role } = req.body;
+    await prisma.user.update({
+      where: { id: parseInt(req.params.id) },
+      data: { role }
+    });
+    res.json({ success: true, message: 'تم تحديث الرتبة بنجاح' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ في التحديث' });
+  }
+};
+
+// @desc    Get public brand profile
+// @access  Public
+const getBrandProfile = async (req, res) => {
+  try {
+    const brand = await prisma.user.findUnique({
+      where: { id: parseInt(req.params.id) },
+      select: {
+          id: true, name: true, 
+          brandProfile: { select: { logo: true, banner: true, description: true } }
+      }
+    });
+    res.json({ success: true, brand });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'خطأ' });
+  }
+};
+
+module.exports = { getUsers, getBrands, createBrand, createBrandLuxe, deleteUser, toggleVerify, updateUserRole, getBrandProfile };

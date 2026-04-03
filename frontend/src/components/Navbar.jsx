@@ -39,8 +39,8 @@ const Navbar = () => {
     <header className="navbar-modern">
       <div className="container nav-container">
         <Link to="/" className="logo">
-          <ShoppingBag size={28} className="text-primary" />
-          <span className="logo-text">Luxe<span className="text-primary">Brands</span></span>
+          <ShoppingBag size={28} color="var(--accent-orange)" />
+          <span className="logo-text">Market<span className="text-accent-orange">Place</span> <span className="logo-ar">ماركت بليس</span></span>
         </Link>
 
         <nav className="nav-links">

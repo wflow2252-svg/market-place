@@ -1,186 +1,130 @@
+import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { BadgeCheck, ShoppingCart, ArrowRight, Package } from 'lucide-react';
+import { BadgeCheck, ShoppingCart, Loader, PauseCircle } from 'lucide-react';
 import './BrandPage.css';
-
-const API = import.meta.env.VITE_API_URL || '';
 
 const BrandPage = () => {
   const { id } = useParams();
-  const [brand, setBrand]       = useState(null);
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [cart, setCart]         = useState([]);
+  const [brand, setBrand] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    const fetchAll = async () => {
-      setLoading(true);
+    const fetchBrand = async () => {
       try {
-        const [brandRes, prodRes] = await Promise.all([
-          fetch(`${API}/v1/brands/${id}`),
-          fetch(`${API}/v1/products/brand/${id}`)
-        ]);
-        const brandData = await brandRes.json();
-        const prodData  = await prodRes.json();
-        if (brandData.success) setBrand(brandData.brand);
-        if (prodData.success)  setProducts(prodData.data);
+        const API_URL = import.meta.env.VITE_API_URL || '';
+        const res = await fetch(`${API_URL}/v1/brands/${id}`);
+        const data = await res.json();
+        if (data.success) {
+          setBrand(data.brand);
+        } else {
+          setError(data.message || 'الماركة غير موجودة');
+        }
       } catch (err) {
-        console.error('Error loading brand page:', err);
+        setError('حدث خطأ أثناء تحميل بيانات الماركة.');
       } finally {
         setLoading(false);
       }
     };
-    fetchAll();
+    fetchBrand();
   }, [id]);
 
-  const addToCart = (product) => {
-    setCart(c => {
-      const existing = c.find(i => i.id === product.id);
-      if (existing) return c.map(i => i.id === product.id ? { ...i, qty: i.qty + 1 } : i);
-      return [...c, { ...product, qty: 1 }];
-    });
-  };
+  if (loading) return <div className="brand-page-loading"><Loader className="spinner" size={40} /></div>;
+  if (error) return <div className="brand-page-error"><h2>{error}</h2></div>;
+  if (!brand) return null;
 
-  if (loading) {
-    return (
-      <div className="bp-loading-page">
-        <div className="bp-cover-skeleton"/>
-        <div className="container">
-          <div className="bp-info-skeleton"/>
-          <div className="bp-products-skeleton">
-            {[1,2,3,4].map(i => <div key={i} className="bp-prod-skeleton"/>)}
-          </div>
-        </div>
-      </div>
-    );
+  const profile = brand.brandProfile || {};
+  const products = brand.products || [];
+
+  // Parse theme colors
+  let primaryColor = '#c9a84c';
+  let secondaryColor = 'rgba(201,168,76,0.12)';
+  if (profile.theme) {
+    try {
+      const t = JSON.parse(profile.theme);
+      primaryColor = t.primaryColor || t.primary || primaryColor;
+      secondaryColor = t.secondaryColor || t.secondary || secondaryColor;
+    } catch (e) {}
   }
 
-  if (!brand) {
-    return (
-      <div className="container bp-not-found">
-        <Package size={64} color="#cbd5e1"/>
-        <h2>البراند غير موجود</h2>
-        <Link to="/" className="btn btn-primary">العودة للرئيسية</Link>
-      </div>
-    );
-  }
-
-  const profile  = brand.brandProfile || {};
-  const theme    = profile.theme ? (() => { try { return JSON.parse(profile.theme); } catch { return {}; } })() : {};
-  const color    = theme.primary || '#2563eb';
-  const isPaused = profile.isPaused || false;
-
-  const promoted = products.filter(p => p.stock > 0).slice(0, 2).map(p => p.id);
+  const bannerStyle = profile.banner
+    ? { backgroundImage: `url(${profile.banner})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+    : { background: `linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, ${primaryColor}22 100%)` };
 
   return (
-    <div className="brand-page">
+    <div className="brand-page animate-fade-in">
 
-      {/* Paused Banner */}
-      {isPaused && (
-        <div className="bp-paused-banner">
-          <span>⏸ هذا المتجر موقوف مؤقتاً ولا يقبل الطلبات حالياً</span>
-        </div>
-      )}
+      {/* ===== HERO BANNER ===== */}
+      <div className="brand-hero" style={bannerStyle}>
+        <div className="brand-hero-overlay" />
+        <div className="container brand-hero-content">
 
-      {/* Cover / Banner */}
-      <div
-        className="brand-cover"
-        style={{
-          background: profile.banner
-            ? `url(${profile.banner}) center/cover no-repeat`
-            : `linear-gradient(135deg, ${color}20, ${color}40)`
-        }}
-      >
-        <div className="cover-gradient"/>
-        <div className="container cover-content">
-          <div className="brand-avatar" style={{ background: color, boxShadow: `0 8px 32px ${color}50` }}>
-            {profile.logo ? <img src={profile.logo} alt={brand.name}/> : brand.name.charAt(0).toUpperCase()}
+          {/* Logo */}
+          <div className="brand-avatar-premium glass-panel">
+            {profile.logo ? (
+              <img src={profile.logo} alt={brand.name} />
+            ) : (
+              <span className="brand-initial title-serif" style={{ color: primaryColor }}>
+                {brand.name.charAt(0).toUpperCase()}
+              </span>
+            )}
+            <BadgeCheck className="verified-badge-large" size={28} style={{ color: primaryColor }} />
           </div>
-          <div className="brand-header-info">
-            <div className="brand-name-row">
-              <h1>{brand.name}</h1>
-              {!isPaused && <span className="bp-active-dot">● نشط</span>}
+
+          {/* Info */}
+          <div className="brand-info">
+            <h1 className="brand-title title-serif" style={{ color: '#fff' }}>{brand.name}</h1>
+            <p className="brand-bio">
+              {profile.description || 'الهوية الرقمية الموثقة للماركة على منصة LuxeBrands الفريدة.'}
+            </p>
+            <div className="brand-stats">
+              <span className="glass-panel" style={{ borderColor: primaryColor, color: primaryColor }}>
+                <strong>{products.length}</strong> منتج
+              </span>
+              {profile.isPaused && (
+                <span className="glass-panel paused-badge">
+                  <PauseCircle size={14} /> مغلق مؤقتاً
+                </span>
+              )}
             </div>
-            {profile.description && <p className="brand-cat">{profile.description}</p>}
-            <span className="bp-count-badge" style={{ background: color + '20', color }}>
-              {brand._count?.products || 0} منتج
-            </span>
           </div>
         </div>
       </div>
 
-      {/* Cart bar */}
-      {cart.length > 0 && (
-        <div className="bp-cart-bar">
-          <span>🛒 {cart.reduce((s, i) => s + i.qty, 0)} عناصر في السلة</span>
-          <span className="bp-cart-total">{cart.reduce((s, i) => s + i.price * i.qty, 0).toFixed(2)} ج.م</span>
-        </div>
-      )}
-
-      {/* Products */}
-      <div className="container brand-content">
-        <div className="section-header-left">
-          <h2>المنتجات</h2>
-          <span className="prod-count">{products.length} منتج</span>
+      {/* ===== PRODUCTS SECTION ===== */}
+      <div className="container brand-showcase">
+        <div className="section-header-elite">
+          <h2 className="title-serif" style={{ color: primaryColor }}>التشكيلة المختارة</h2>
+          <div className="header-line-silver" style={{ background: primaryColor }} />
         </div>
 
-        {products.length === 0 ? (
-          <div className="bp-no-products">
-            <Package size={56} color="#cbd5e1"/>
-            <p>لا توجد منتجات متاحة حالياً</p>
+        {products.length > 0 ? (
+          <div className="products-grid">
+            {products.map((prod, index) => (
+              <div key={prod.id} className={`product-card-elite glass-panel animate-fade-in stagger-${(index % 5) + 1}`}>
+                <div className="product-img-ph">
+                  {prod.images
+                    ? <img src={prod.images} alt={prod.name} />
+                    : <div className="placeholder-solid" style={{ background: secondaryColor }} />
+                  }
+                </div>
+                <div className="product-details-elite">
+                  <h4 className="title-serif">{prod.name}</h4>
+                  {prod.description && <p className="prod-desc text-muted">{prod.description.slice(0, 70)}...</p>}
+                  <p className="price" style={{ color: primaryColor }}>{prod.price} ج.م</p>
+                  <div className="stock-badge">{prod.stock > 0 ? `متاح (${prod.stock})` : 'نفذت الكمية'}</div>
+                  <button className="btn-luxe full-width" style={{ marginTop: '15px', '--btn-color': primaryColor }}>
+                    <ShoppingCart size={18} /> أضف للسلة
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
-          <div className="products-grid">
-            {products.map(prod => {
-              const isPromoted = promoted.includes(prod.id);
-              const inCart = cart.find(i => i.id === prod.id)?.qty || 0;
-              return (
-                <div key={prod.id} className={`product-card card ${isPromoted ? 'prod-promoted' : ''}`}>
-                  {isPromoted && (
-                    <span className="badge-promoted prod-badge">
-                      <BadgeCheck size={12}/> الأكثر مبيعاً
-                    </span>
-                  )}
-
-                  {/* Product Image */}
-                  <div className="product-img-ph" style={{
-                    background: prod.images ? 'transparent' : color + '15',
-                    overflow: 'hidden'
-                  }}>
-                    {prod.images
-                      ? <img src={prod.images} alt={prod.name} style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
-                      : (
-                        <div className="prod-img-fallback" style={{ color }}>
-                          <ShoppingCart size={40}/>
-                        </div>
-                      )
-                    }
-                  </div>
-
-                  {/* Details */}
-                  <div className="product-details">
-                    <h4>{prod.name}</h4>
-                    {prod.description && <p className="prod-desc">{prod.description}</p>}
-                    <div className="prod-bottom">
-                      <p className="price" style={{ color }}>{prod.price.toFixed(2)} ج.م</p>
-                      {prod.stock > 0 ? (
-                        <button
-                          className={`btn btn-primary full-width ${inCart > 0 ? 'in-cart' : ''}`}
-                          style={{ background: color, borderColor: color }}
-                          onClick={() => !isPaused && addToCart(prod)}
-                          disabled={isPaused}
-                        >
-                          <ShoppingCart size={16}/>
-                          {inCart > 0 ? `في السلة (${inCart})` : 'أضف للسلة'}
-                        </button>
-                      ) : (
-                        <button className="btn btn-out-of-stock full-width" disabled>نفد المخزون</button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          <div className="empty-catalog text-center glass-panel">
+            <BadgeCheck size={48} color={primaryColor} />
+            <h3 className="title-serif">ترقبوا التدشين قريباً</h3>
+            <p className="text-muted">الماركة تقوم حالياً بتجهيز أحدث مجموعاتها الفاخرة.</p>
           </div>
         )}
       </div>

@@ -1,373 +1,352 @@
-import { useState, useEffect, useCallback } from 'react';
-import {
-  Settings, Plus, Users, ShieldCheck, ShoppingBag,
-  Trash2, Edit2, CheckCircle, XCircle, RefreshCw,
-  Store, AlertTriangle, Search, ChevronDown
-} from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Settings, Plus, Users, ShieldCheck, ShoppingBag, Power, Sparkles, Wand2, Image as ImageIcon, CheckCircle2, ChevronRight, Loader2, Eye, Mail, Fingerprint, Activity } from 'lucide-react';
+import { analyzeBrandImage } from '../utils/aiBranding';
+import emailjs from '@emailjs/browser';
 import './Admin.css';
 
-const API = import.meta.env.VITE_API_URL || '';
-const token = () => localStorage.getItem('token');
-
-// ── Toast helper ─────────────────────────────────────────
-const Toast = ({ msg, type, onClose }) => (
-  <div className={`admin-toast admin-toast-${type}`}>
-    {type === 'success' ? <CheckCircle size={16}/> : <AlertTriangle size={16}/>}
-    <span>{msg}</span>
-    <button onClick={onClose} className="toast-close">×</button>
-  </div>
-);
-
 const Admin = () => {
+  const [users, setUsers] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [siteSettings, setSiteSettings] = useState({ isMaintenance: false });
   const [activeTab, setActiveTab] = useState('users');
-  const [toast, setToast]         = useState(null);
-  const [search, setSearch]       = useState('');
+  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState(1);
+  const [selectedUser, setSelectedUser] = useState(null); // For Data Transparency
 
-  // Users
-  const [users, setUsers]         = useState([]);
-  const [usersLoading, setUL]     = useState(false);
+  // Form States
+  const [brandData, setBrandData] = useState({ 
+    name: '', email: '', password: '', 
+    description: '', logo: '', banner: '', theme: null 
+  });
+  const [aiAnalyzing, setAiAnalyzing] = useState(false);
 
-  // Brands
-  const [brands, setBrands]       = useState([]);
-  const [brandsLoading, setBL]    = useState(false);
-
-  // Products
-  const [products, setProducts]   = useState([]);
-  const [prodsLoading, setPL]     = useState(false);
-
-  // Add Brand form
-  const [brandForm, setBrandForm] = useState({ name: '', email: '', password: '' });
-  const [addLoading, setAddL]     = useState(false);
-
-  const showToast = (msg, type = 'success') => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3500);
-  };
-
-  // ── Fetchers ─────────────────────────────────────────
-  const fetchUsers = useCallback(async () => {
-    setUL(true);
-    try {
-      const r = await fetch(`${API}/v1/users`, { headers: { Authorization: `Bearer ${token()}` } });
-      const d = await r.json();
-      if (d.success) setUsers(d.users);
-    } finally { setUL(false); }
+  useEffect(() => {
+    fetchUsers();
+    fetchOrders();
+    fetchSettings();
   }, []);
 
-  const fetchBrands = useCallback(async () => {
-    setBL(true);
+  const fetchUsers = async () => {
     try {
-      const r = await fetch(`${API}/v1/brands`, { headers: { Authorization: `Bearer ${token()}` } });
-      const d = await r.json();
-      if (d.success) setBrands(d.brands);
-    } finally { setBL(false); }
-  }, []);
+      const token = localStorage.getItem('token');
+      const API_URL = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${API_URL}/v1/users`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.success) setUsers(data.users);
+    } catch (error) { console.error('Fetch users error:', error); }
+  };
 
-  const fetchProducts = useCallback(async () => {
-    setPL(true);
+  const fetchOrders = async () => {
     try {
-      const r = await fetch(`${API}/v1/products`, { headers: { Authorization: `Bearer ${token()}` } });
-      const d = await r.json();
-      if (d.success) setProducts(d.data);
-    } finally { setPL(false); }
-  }, []);
-
-  useEffect(() => { fetchUsers(); }, [fetchUsers]);
-  useEffect(() => { if (activeTab === 'brands') fetchBrands(); }, [activeTab, fetchBrands]);
-  useEffect(() => { if (activeTab === 'products') fetchProducts(); }, [activeTab, fetchProducts]);
-
-  // ── User Actions ──────────────────────────────────────
-  const deleteUser = async (id, name) => {
-    if (!confirm(`هل أنت متأكد من حذف "${name}"؟`)) return;
-    const r = await fetch(`${API}/v1/users/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token()}` } });
-    const d = await r.json();
-    if (d.success) { showToast('تم حذف المستخدم'); fetchUsers(); }
-    else showToast(d.message, 'error');
+      const token = localStorage.getItem('token');
+      const API_URL = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${API_URL}/v1/orders`, { headers: { Authorization: `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.success) setOrders(data.data);
+    } catch (error) { console.error('Fetch orders error:', error); }
   };
 
-  const toggleVerify = async (id) => {
-    const r = await fetch(`${API}/v1/users/${id}/verify`, { method: 'PATCH', headers: { Authorization: `Bearer ${token()}` } });
-    const d = await r.json();
-    if (d.success) { showToast(d.message); fetchUsers(); }
-    else showToast(d.message, 'error');
+  const fetchSettings = async () => {
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${API_URL}/v1/settings`);
+      const data = await res.json();
+      if (data.success) setSiteSettings(data.data);
+    } catch (error) { console.error('Fetch settings error:', error); }
   };
 
-  const changeRole = async (id, role) => {
-    const r = await fetch(`${API}/v1/users/${id}/role`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
-      body: JSON.stringify({ role })
-    });
-    const d = await r.json();
-    if (d.success) { showToast('تم تحديث الدور'); fetchUsers(); }
-    else showToast(d.message, 'error');
+  const generateRandomCreds = () => {
+    const randomPass = Math.random().toString(36).slice(-8) + 'Lux!';
+    setBrandData({ ...brandData, password: randomPass });
   };
 
-  // ── Brand Actions ─────────────────────────────────────
-  const toggleBrandPause = async (id) => {
-    const r = await fetch(`${API}/v1/brands/${id}/pause`, { method: 'PATCH', headers: { Authorization: `Bearer ${token()}` } });
-    const d = await r.json();
-    if (d.success) { showToast(d.message); fetchBrands(); }
-    else showToast(d.message, 'error');
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setAiAnalyzing(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new window.Image();
+      img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 500;
+        const scaleSize = MAX_WIDTH / img.width;
+        canvas.width = MAX_WIDTH;
+        canvas.height = img.height * scaleSize;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // Compress the image aggressively to avoid Vercel 4.5MB limit
+        const imgUrl = canvas.toDataURL('image/webp', 0.6);
+        
+        setBrandData(prev => ({ ...prev, logo: imgUrl }));
+        try {
+          const theme = await analyzeBrandImage(imgUrl);
+          setBrandData(prev => ({ ...prev, theme }));
+        } catch (err) { console.error('AI Analysis failed', err); }
+        finally { setAiAnalyzing(false); }
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
   };
 
-  // ── Product Actions ───────────────────────────────────
-  const deleteProduct = async (id, name) => {
-    if (!confirm(`حذف المنتج "${name}"؟`)) return;
-    const r = await fetch(`${API}/v1/products/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token()}` } });
-    const d = await r.json();
-    if (d.success) { showToast('تم حذف المنتج'); fetchProducts(); }
-    else showToast(d.message, 'error');
-  };
-
-  // ── Add Brand ─────────────────────────────────────────
-  const handleAddBrand = async (e) => {
+  const handleAddBrandFinal = async (e) => {
     e.preventDefault();
-    setAddL(true);
+    setLoading(true);
     try {
-      const r = await fetch(`${API}/v1/users/brand`, {
+      const token = localStorage.getItem('token');
+      const API_URL = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${API_URL}/v1/elite-brand-init`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` },
-        body: JSON.stringify(brandForm)
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          ...brandData,
+          brandLogo: brandData.logo,
+          brandBanner: brandData.banner,
+          brandDescription: brandData.description,
+          brandTheme: JSON.stringify(brandData.theme)
+        })
       });
-      const d = await r.json();
-      if (d.success) {
-        showToast('تم إنشاء البراند بنجاح ✓');
-        setBrandForm({ name: '', email: '', password: '' });
+      const data = await res.json();
+      if (data.success) {
+        // ... (rest of success block)
+        alert('✨ تم إنشاء الماركة بنجاح في سوق مصر! سيتم ارسال الي المالك كود التاكيد.');
+        setBrandData({ name: '', email: '', password: '', description: '', logo: '', banner: '', theme: null });
+        setStep(1);
         fetchUsers();
-        setActiveTab('brands');
-      } else showToast(d.message, 'error');
-    } catch { showToast('خطأ في الاتصال', 'error'); }
-    finally { setAddL(false); }
+      } else {
+        alert('خطأ من السيرفر V9: ' + (data.message || 'فشل الأن'));
+      }
+    } catch (error) {
+      console.error('[Upload Request Error]', error);
+      alert('خطأ في الاتصال بالخادم V9: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // ── Filter helpers ────────────────────────────────────
-  const filteredUsers    = users.filter(u => u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase()));
-  const filteredBrands   = brands.filter(b => b.name.toLowerCase().includes(search.toLowerCase()));
-  const filteredProducts = products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
-
-  const roleColor = { ADMIN: '#ef4444', BRAND: '#2563eb', USER: '#64748b' };
-
-  const tabs = [
-    { id: 'users',    icon: <Users size={18}/>,       label: 'المستخدمون', count: users.length },
-    { id: 'brands',   icon: <Store size={18}/>,       label: 'البراندات',  count: brands.length },
-    { id: 'products', icon: <ShoppingBag size={18}/>, label: 'المنتجات',   count: products.length },
-    { id: 'addBrand', icon: <Plus size={18}/>,        label: 'إضافة براند' },
-  ];
+  const toggleMaintenance = async () => {
+    const confirmToggle = window.confirm(`هل تريد ${siteSettings.isMaintenance ? 'فتح' : 'إغلاق'} الموقع؟`);
+    if (!confirmToggle) return;
+    try {
+      const token = localStorage.getItem('token');
+      const API_URL = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${API_URL}/v1/settings/maintenance`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ isMaintenance: !siteSettings.isMaintenance })
+      });
+      const data = await res.json();
+      if (data.success) { setSiteSettings(data.data); alert(data.message); }
+    } catch (error) { alert('فشل تغيير الإعدادات'); }
+  };
 
   return (
-    <div className="admin-page container">
-      {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
-
-      {/* Header */}
-      <div className="admin-header">
-        <div className="admin-title-row">
-          <ShieldCheck size={32} color="#2563eb" />
+    <div className="admin-page container animate-fade-in">
+      <div className="admin-header glass-panel">
+        <div className="admin-title">
+          <ShieldCheck size={48} className="animate-luxe" color="var(--accent-orange)" />
           <div>
-            <h2>لوحة تحكم الإدارة</h2>
-            <p className="admin-subtitle">إدارة شاملة للمستخدمين والبراندات والمنتجات</p>
+            <h2 className="title-serif text-gradient-warm">بوابة شركاء MarketPlace</h2>
+            <p className="text-muted">التحكم بلمسة دافئة وشفافية مطلقة في سوق مصر</p>
           </div>
-        </div>
-        <div className="admin-search-box">
-          <Search size={16} />
-          <input
-            type="text"
-            placeholder="بحث..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="admin-search-input"
-          />
         </div>
       </div>
 
       <div className="admin-grid">
-        {/* Sidebar */}
-        <aside className="admin-sidebar">
+        <aside className="admin-sidebar glass-panel">
           <ul className="admin-menu">
-            {tabs.map(t => (
-              <li
-                key={t.id}
-                className={activeTab === t.id ? 'active' : ''}
-                onClick={() => { setActiveTab(t.id); setSearch(''); }}
-              >
-                {t.icon}
-                <span>{t.label}</span>
-                {t.count !== undefined && <span className="menu-badge">{t.count}</span>}
-              </li>
-            ))}
+            <li className={activeTab === 'users' ? 'active' : ''} onClick={() => setActiveTab('users')}>
+              <Users size={18}/> الحسابات والبيانات
+            </li>
+            <li className={activeTab === 'orders' ? 'active' : ''} onClick={() => setActiveTab('orders')}>
+              <ShoppingBag size={18}/> حركة التجارة
+            </li>
+            <li className={activeTab === 'addBrand' ? 'active' : ''} onClick={() => setActiveTab('addBrand')}>
+              <Sparkles size={18} color="var(--accent-orange)"/> منشئ الماركات الودودة
+            </li>
+            <li className={activeTab === 'settings' ? 'active' : ''} onClick={() => setActiveTab('settings')}>
+              <Settings size={18}/> لوحة التحكم المركزية
+            </li>
           </ul>
         </aside>
 
-        {/* Content */}
-        <main className="admin-content">
-
-          {/* ── USERS TAB ── */}
+        <main className="admin-content glass-panel">
           {activeTab === 'users' && (
-            <>
+            <div className="animate-fade-in">
               <div className="content-header">
-                <h3>المستخدمون ({filteredUsers.length})</h3>
-                <button className="btn-refresh" onClick={fetchUsers}><RefreshCw size={15}/></button>
+                <h3 className="title-serif text-gradient-warm">سجل العائلة والشركاء</h3>
+                <span className="badge-elite">{users.length} هويات رقمية</span>
               </div>
-              {usersLoading ? <div className="admin-loading">جاري التحميل...</div> : (
-                <div className="table-wrapper">
-                  <table className="admin-table">
-                    <thead><tr>
-                      <th>الاسم</th><th>البريد</th><th>الدور</th><th>الحالة</th><th>التاريخ</th><th>إجراءات</th>
-                    </tr></thead>
-                    <tbody>
-                      {filteredUsers.map(u => (
-                        <tr key={u.id}>
-                          <td><strong>{u.name}</strong></td>
-                          <td className="text-muted">{u.email}</td>
-                          <td>
-                            <select
-                              className="role-select"
-                              value={u.role}
-                              style={{ color: roleColor[u.role] }}
-                              onChange={e => changeRole(u.id, e.target.value)}
-                            >
-                              <option value="USER">USER</option>
-                              <option value="BRAND">BRAND</option>
-                              <option value="ADMIN">ADMIN</option>
-                            </select>
-                          </td>
-                          <td>
-                            <span className={`status-badge ${u.isVerified ? 'verified' : 'unverified'}`}>
-                              {u.isVerified ? '✓ مفعّل' : '✗ غير مفعّل'}
-                            </span>
-                          </td>
-                          <td className="text-muted">{new Date(u.createdAt).toLocaleDateString('ar-EG')}</td>
-                          <td>
-                            <div className="actions-cell">
-                              <button className="btn-icon" title={u.isVerified ? 'إلغاء التفعيل' : 'تفعيل'} onClick={() => toggleVerify(u.id)}>
-                                {u.isVerified ? <XCircle size={15}/> : <CheckCircle size={15}/>}
-                              </button>
-                              <button className="btn-icon delete" title="حذف" onClick={() => deleteUser(u.id, u.name)}>
-                                <Trash2 size={15}/>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                      {filteredUsers.length === 0 && <tr><td colSpan="6" className="empty-row">لا توجد نتائج</td></tr>}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </>
-          )}
-
-          {/* ── BRANDS TAB ── */}
-          {activeTab === 'brands' && (
-            <>
-              <div className="content-header">
-                <h3>البراندات ({filteredBrands.length})</h3>
-                <button className="btn-refresh" onClick={fetchBrands}><RefreshCw size={15}/></button>
-              </div>
-              {brandsLoading ? <div className="admin-loading">جاري التحميل...</div> : (
-                <div className="brands-admin-grid">
-                  {filteredBrands.map(b => {
-                    const theme = b.brandProfile?.theme ? (() => { try { return JSON.parse(b.brandProfile.theme); } catch { return {}; } })() : {};
-                    const color = theme.primary || '#2563eb';
-                    const isPaused = b.brandProfile?.isPaused;
-                    return (
-                      <div key={b.id} className={`brand-admin-card ${isPaused ? 'paused' : ''}`}>
-                        <div className="bac-logo" style={{ background: color + '20', color }}>
-                          {b.brandProfile?.logo
-                            ? <img src={b.brandProfile.logo} alt={b.name}/>
-                            : b.name.charAt(0).toUpperCase()
+              <div className="table-responsive">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>الهوية</th>
+                      <th>الاسم</th>
+                      <th>المستوى</th>
+                      <th>الحالة</th>
+                      <th>كود النشاط</th>
+                      <th>تفاصيل</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((u, index) => (
+                      <tr key={u.id} className={`animate-fade-in stagger-${(index % 5) + 1}`}>
+                        <td><Fingerprint size={16} color="var(--accent-silver)" /></td>
+                        <td>{u.name}</td>
+                        <td><span className={`role-tag-elite ${u.role.toLowerCase()}`}>{u.role}</span></td>
+                        <td>
+                          {u.isVerified ? 
+                            <span className="status-active"><Activity size={12}/> مفعل</span> : 
+                            <span className="status-pending">معلق</span>
                           }
-                        </div>
-                        <div className="bac-info">
-                          <h4>{b.name}</h4>
-                          <span className="bac-count">{b._count?.products || 0} منتج</span>
-                          {isPaused && <span className="bac-paused-badge">موقوف</span>}
-                        </div>
-                        <div className="bac-actions">
-                          <button
-                            className={`btn-pause ${isPaused ? 'resume' : 'pause'}`}
-                            onClick={() => toggleBrandPause(b.id)}
-                          >
-                            {isPaused ? '▶ تشغيل' : '⏸ إيقاف'}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  {filteredBrands.length === 0 && <div className="empty-state">لا توجد براندات مسجلة</div>}
+                        </td>
+                        <td className="code-cell">{u.isVerified ? '---' : u.otp || 'N/A'}</td>
+                        <td>
+                          <button className="btn-icon" onClick={() => setSelectedUser(u)}><Eye size={18} /></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {selectedUser && (
+                <div className="user-detail-overlay glass-panel animate-fade-in">
+                  <div className="detail-header">
+                    <h4>تفاصيل الحساب الكاملة</h4>
+                    <button onClick={() => setSelectedUser(null)}>إغلاق</button>
+                  </div>
+                  <pre className="detail-json">{JSON.stringify(selectedUser, null, 2)}</pre>
                 </div>
               )}
-            </>
-          )}
-
-          {/* ── PRODUCTS TAB ── */}
-          {activeTab === 'products' && (
-            <>
-              <div className="content-header">
-                <h3>المنتجات ({filteredProducts.length})</h3>
-                <button className="btn-refresh" onClick={fetchProducts}><RefreshCw size={15}/></button>
-              </div>
-              {prodsLoading ? <div className="admin-loading">جاري التحميل...</div> : (
-                <div className="table-wrapper">
-                  <table className="admin-table">
-                    <thead><tr>
-                      <th>المنتج</th><th>البراند</th><th>السعر</th><th>المخزون</th><th>التصنيف</th><th>إجراءات</th>
-                    </tr></thead>
-                    <tbody>
-                      {filteredProducts.map(p => (
-                        <tr key={p.id}>
-                          <td><strong>{p.name}</strong></td>
-                          <td className="text-muted">{p.brand?.name || '—'}</td>
-                          <td><strong style={{ color: '#2563eb' }}>{p.price} ج.م</strong></td>
-                          <td>{p.stock}</td>
-                          <td className="text-muted">{p.category?.name || '—'}</td>
-                          <td>
-                            <div className="actions-cell">
-                              <button className="btn-icon delete" title="حذف" onClick={() => deleteProduct(p.id, p.name)}>
-                                <Trash2 size={15}/>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                      {filteredProducts.length === 0 && <tr><td colSpan="6" className="empty-row">لا توجد منتجات</td></tr>}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </>
-          )}
-
-          {/* ── ADD BRAND TAB ── */}
-          {activeTab === 'addBrand' && (
-            <div className="add-brand-section">
-              <div className="content-header">
-                <h3>إنشاء حساب براند جديد</h3>
-              </div>
-              <p className="add-brand-desc">البراند سيحصل على لوحة تحكم خاصة لإدارة منتجاته وتخصيص متجره.</p>
-              <form className="add-brand-form" onSubmit={handleAddBrand}>
-                <div className="form-group">
-                  <label>اسم البراند</label>
-                  <input type="text" placeholder="مثال: Lumière" className="form-input" required
-                    value={brandForm.name} onChange={e => setBrandForm({...brandForm, name: e.target.value})} />
-                </div>
-                <div className="form-group">
-                  <label>البريد الإلكتروني</label>
-                  <input type="email" placeholder="brand@example.com" className="form-input" required
-                    value={brandForm.email} onChange={e => setBrandForm({...brandForm, email: e.target.value})} />
-                </div>
-                <div className="form-group">
-                  <label>كلمة المرور</label>
-                  <input type="password" placeholder="كلمة مرور قوية" className="form-input" required
-                    value={brandForm.password} onChange={e => setBrandForm({...brandForm, password: e.target.value})} />
-                </div>
-                <button type="submit" className="btn btn-primary" disabled={addLoading}>
-                  {addLoading ? 'جاري الإنشاء...' : <><Plus size={18}/> إنشاء البراند</>}
-                </button>
-              </form>
             </div>
           )}
 
+          {activeTab === 'addBrand' && (
+            <div className="ai-brand-wizard animate-fade-in">
+              <div className="wizard-header">
+                <div className={`step-ind ${step >= 1 ? 'active' : ''}`}>1. الجوهر</div>
+                <div className={`step-l ${step >= 2 ? 'active' : ''}`}></div>
+                <div className={`step-ind ${step >= 2 ? 'active' : ''}`}>2. الرؤية</div>
+                <div className={`step-l ${step >= 3 ? 'active' : ''}`}></div>
+                <div className={`step-ind ${step >= 3 ? 'active' : ''}`}>3. الإطلاق</div>
+              </div>
+
+              {step === 1 && (
+                <div className="wizard-step card glass-panel">
+                  <h3 className="silver-glow">تحديد الجوهر الأساسي</h3>
+                  <div className="input-row">
+                    <input type="text" placeholder="اسم الماركة الملكية" className="elite-input" value={brandData.name} onChange={e => setBrandData({...brandData, name: e.target.value})} />
+                  </div>
+                  <input type="email" placeholder="البريد الإلكتروني" className="elite-input" value={brandData.email} onChange={e => setBrandData({...brandData, email: e.target.value})} />
+                  <div className="input-row">
+                    <input type="text" placeholder="كلمة المرور" className="elite-input" value={brandData.password} onChange={e => setBrandData({...brandData, password: e.target.value})} />
+                    <button className="btn-outline-silver mini" onClick={generateRandomCreds}>توليد مفتاح دخول ✨</button>
+                  </div>
+                  <button className="btn-luxe" onClick={() => setStep(2)}>التالي: تحليل الرؤية البصرية <ChevronRight size={18}/></button>
+                </div>
+              )}
+
+              {step === 2 && (
+                <div className="wizard-step card glass-panel">
+                  <h3 className="silver-glow">تحليل الرؤية (Elite AI)</h3>
+                  <p>ارفع الشعار، وسنقوم باستخراج جينات الفخامة وتنسيق الموقع تلقائياً</p>
+                  
+                  <div className="upload-zone-elite">
+                    <input type="file" id="logoUpload" hidden onChange={handleLogoUpload} accept="image/*" />
+                    <label htmlFor="logoUpload" className="upload-label-elite">
+                      {aiAnalyzing ? <Loader2 className="spinner-luxe" size={48} /> : brandData.logo ? <img src={brandData.logo} className="preview-logo-elite" /> : <ImageIcon size={48} />}
+                      <span>{aiAnalyzing ? 'جاري التحليل الجيني للماركة...' : 'اضغط لرفع شعار النخبة'}</span>
+                    </label>
+                  </div>
+
+                  {brandData.theme && (
+                    <div className="ai-result-elite animate-fade-in">
+                      <div className="check-badge-silver"><CheckCircle2 size={16} /> تم استخراج الهوية البصرية</div>
+                      <div className="palette-elite">
+                        <div className="box-elite" style={{ background: brandData.theme.primaryColor }}></div>
+                        <div className="box-elite" style={{ background: brandData.theme.accentColor }}></div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="wizard-actions">
+                    <button className="btn-outline-silver" onClick={() => setStep(1)}>عودة</button>
+                    <button className="btn-luxe" disabled={!brandData.theme} onClick={() => setStep(3)}>التالي: التفاصيل النهائية</button>
+                  </div>
+                </div>
+              )}
+
+              {step === 3 && (
+                <div className="wizard-step card glass-panel">
+                  <h3 className="silver-glow">الإطلاق والتدشين الرسمي</h3>
+                  <textarea placeholder="قصة الماركة ورؤيتها..." className="elite-input" rows="4" value={brandData.description} onChange={e => setBrandData({...brandData, description: e.target.value})}></textarea>
+                  
+                  <div className="activation-note glass-panel">
+                    <Mail size={24} color="var(--accent-silver)" />
+                    <p>سيتم ارسال الي المالك كود التاكيد عند الضغط على تأكيد.</p>
+                  </div>
+
+                  <div className="wizard-actions">
+                    <button className="btn-outline-silver" onClick={() => setStep(2)}>عودة</button>
+                    <button className="btn-luxe" onClick={handleAddBrandFinal} disabled={loading}>{loading ? 'جاري البناء السحابي...' : 'تأكيد ودفع الماركة للواقع'}</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'orders' && (
+            <div className="animate-fade-in">
+              <div className="content-header">
+                <h3 className="title-serif text-gradient-warm">تدفقات المحبة والنجاح</h3>
+                <span className="badge-elite">{orders.length} معاملات</span>
+              </div>
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>المعاملة</th>
+                    <th>العميل</th>
+                    <th>القيمة</th>
+                    <th>الحالة</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((o, index) => (
+                    <tr key={o.id} className={`animate-fade-in stagger-${(index % 5) + 1}`}>
+                      <td>#{o.id}</td>
+                      <td>{o.user?.name}</td>
+                      <td className="silver-glow">{o.totalAmount} ج.م</td>
+                      <td><span className={`status-badge-elite ${o.status.toLowerCase()}`}>{o.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {activeTab === 'settings' && (
+            <div className="settings-panel animate-fade-in">
+              <div className="content-header">
+                <h3 className="title-serif text-gradient-warm">التحكم الودود</h3>
+              </div>
+              <div className="maintenance-card-elite glass-panel">
+                <div className="elite-info">
+                  <Power size={48} color={siteSettings.isMaintenance ? "#ef4444" : "var(--accent-orange)"} />
+                  <div>
+                    <h4>السيادة العام للموقع</h4>
+                    <p>{siteSettings.isMaintenance ? 'الموقع مغلق حالياً بوضع الصيانة النخبوية.' : 'الموقع متاح للجمهور والعملاء.'}</p>
+                  </div>
+                </div>
+                <button className={`btn-luxe ${siteSettings.isMaintenance ? 'open' : 'close'}`} style={{ background: siteSettings.isMaintenance ? '#10b981' : '#ef4444' }} onClick={toggleMaintenance}>
+                  {siteSettings.isMaintenance ? 'تفعيل الوصول العام' : 'إغلاق البوابة الآن'}
+                </button>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </div>

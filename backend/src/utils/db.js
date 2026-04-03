@@ -1,4 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
+const { PrismaClient } = require('../generated/client');
 
 // ✅ الحل الصح لـ Prisma v7+ على Vercel Serverless
 // الـ DATABASE_URL بيتاخد تلقائياً من env - مش محتاج نمرره يدوي

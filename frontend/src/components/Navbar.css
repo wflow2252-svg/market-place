@@ -21,41 +21,43 @@
 }
 
 .logo-text {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--text-dark);
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--accent-brown);
+  letter-spacing: -1px;
+}
+
+.logo-ar {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-right: 5px;
+  background: rgba(230, 126, 34, 0.1);
+  padding: 4px 10px;
+  border-radius: 8px;
 }
 
 .nav-links {
   display: flex;
-  gap: 2rem;
+  gap: 1.2rem;
 }
 
-.nav-link {
-  font-weight: 600;
-  color: var(--text-gray);
-  transition: var(--transition);
-  position: relative;
+.nav-actions .btn {
+  padding: 10px 22px;
+  border-radius: 12px;
+  font-weight: 700;
+  transition: var(--transition-warm);
 }
 
-.nav-link:hover {
-  color: var(--primary-color);
+.nav-actions .btn-outline {
+  background: rgba(61, 43, 31, 0.05); /* Matching Box Look */
+  border: 1px solid var(--border-light);
+  color: var(--accent-brown);
 }
 
-.nav-link::after {
-  content: '';
-  position: absolute;
-  width: 0;
-  height: 2px;
-  bottom: -4px;
-  right: 0;
-  background-color: var(--primary-color);
-  transition: var(--transition);
-  border-radius: 2px;
-}
-
-.nav-link:hover::after {
-  width: 100%;
+.nav-actions .btn-outline:hover {
+  background: var(--accent-brown);
+  color: #fff;
 }
 
 .nav-actions {
